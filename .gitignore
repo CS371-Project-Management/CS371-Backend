@@ -1,0 +1,43 @@
+# Ignore the Go binary files
+/bin/
+/obj/
+
+# Ignore the Go vendor directory
+/vendor/
+
+# Ignore Go's module cache
+/pkg/
+
+# Ignore the Go test binary
+*.test
+
+# Ignore IDE/editor specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Ignore Docker-related files
+.docker/
+docker-compose.override.yml
+
+# Ignore the .env file to keep environment variables private
+.env
+
+# Ignore compiled files from Go
+*.exe
+*.out
+*.app
+
+# Ignore database files and logs
+*.log
+*.sql
+*.db
+
+# Ignore OS-specific files (for MacOS and Linux)
+.DS_Store
+Thumbs.db
+
+# Ignore Go module files that shouldn't be pushed
+/go.sum
+/go.mod
