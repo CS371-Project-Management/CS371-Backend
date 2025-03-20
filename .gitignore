@@ -31,7 +31,6 @@ docker-compose.override.yml
 
 # Ignore database files and logs
 *.log
-*.sql
 *.db
 
 # Ignore OS-specific files (for MacOS and Linux)
