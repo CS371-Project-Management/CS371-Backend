@@ -77,7 +77,7 @@ func (c *UserController) UpdateUser(ctx *fiber.Ctx) error {
 		})
 	}
 
-	user.ID = uint(id)
+	user.ID = int(id)
 	if err := c.service.UpdateUser(user); err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": err.Error(),

@@ -1,42 +1,53 @@
-# Ignore the Go binary files
-/bin/
-/obj/
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+main
+/tmp
 
-# Ignore the Go vendor directory
-/vendor/
-
-# Ignore Go's module cache
-/pkg/
-
-# Ignore the Go test binary
+# Test binary, built with `go test -c`
 *.test
 
-# Ignore IDE/editor specific files
+# Output of the go coverage tool
+*.out
+
+# Go workspace file
+go.work
+
+# Dependency directories
+vendor/
+
+# Air temporary files
+.air.toml.tmp
+/tmp/
+
+# Environment variables
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# IDE specific files
 .idea/
 .vscode/
 *.swp
 *.swo
 
-# Ignore Docker-related files
-.docker/
-docker-compose.override.yml
-
-# Ignore the .env file to keep environment variables private
-.env
-
-# Ignore compiled files from Go
-*.exe
-*.out
-*.app
-
-# Ignore database files and logs
-*.log
-*.db
-
-# Ignore OS-specific files (for MacOS and Linux)
+# OS specific files
 .DS_Store
 Thumbs.db
 
-# Ignore Go module files that shouldn't be pushed
-/go.sum
-/go.mod
+# Database files
+*.db
+*.sqlite
+
+# Logs
+*.log
+logs/
+
+# Build directory
+/build/
+/dist/

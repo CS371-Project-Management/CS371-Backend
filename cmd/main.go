@@ -19,9 +19,9 @@ func init() {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 
-	if err := db.RunMigrations(); err != nil {
-		log.Fatalf("Failed to run migrations: %v", err)
-	}
+	//if err := db.RunMigrations(); err != nil {
+	//	log.Fatalf("Failed to run migrations: %v", err)
+	//}
 
 	// Seed
 	//seeder := seeders.NewSeeder()

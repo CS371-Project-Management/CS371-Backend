@@ -1,27 +1,12 @@
-FROM golang:1.24.1-alpine AS builder
-
+FROM golang:1.24.1-alpine
 WORKDIR /app
+RUN apk add --no-cache gcc musl-dev mysql-client
+
+RUN go install github.com/air-verse/air@latest
 
 COPY go.mod go.sum ./
-
-RUN go mod tidy
-
-COPY . .
-
-WORKDIR /app/cmd
-
-RUN go build -o main .
-
-FROM alpine:latest
-
-RUN apk --no-cache add ca-certificates mysql-client
-
-WORKDIR /app
-
-COPY --from=builder /app/cmd/main /app/main
-
-COPY .env .env
+RUN go mod download
 
 EXPOSE 8080
 
-CMD ["/app/main"]
+CMD ["air", "-c", ".air.toml"]
