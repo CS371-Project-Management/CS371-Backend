@@ -16,4 +16,8 @@ func SetupRoutes(app *fiber.App) {
 	app.Delete("/users/:id", userController.DeleteUser)
 
 	app.Post("/login", userController.LoginHandler)
+	app.Post("/logout", userController.Logout)
+
+	app.Post("/request-reset-password", userController.RequestResetPassword)
+	app.Post("/reset-password", userController.ResetPassword)
 }

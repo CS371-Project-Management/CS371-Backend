@@ -166,3 +166,54 @@ func (c *UserController) DeleteUser(ctx *fiber.Ctx) error {
     // 204 No Content
     return ctx.SendStatus(fiber.StatusNoContent)
 }
+
+// RequestResetPassword รับ email จากผู้ใช้ เพื่อขอรีเซ็ตรหัสผ่าน
+func (uc *UserController) RequestResetPassword(c *fiber.Ctx) error {
+    var req struct {
+        Email string `json:"email"`
+    }
+    if err := c.BodyParser(&req); err != nil {
+        return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+            "error": "Invalid request body",
+        })
+    }
+
+    token, err := uc.service.GenerateResetPasswordToken(req.Email)
+    if err != nil {
+        return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+            "error": err.Error(),
+        })
+    }
+
+    // ส่งอีเมลจริง หรือ mock แสดงใน console
+    resetLink := "https://example.com/reset-password?token=" + token
+    println("Reset link:", resetLink)
+
+    return c.JSON(fiber.Map{
+        "message": "Reset password link sent",
+    })
+}
+
+// ResetPassword รับ reset token และ newPassword แล้วเปลี่ยนรหัสผ่าน
+func (uc *UserController) ResetPassword(c *fiber.Ctx) error {
+    var req struct {
+        Token       string `json:"token"`
+        NewPassword string `json:"newPassword"`
+    }
+    if err := c.BodyParser(&req); err != nil {
+        return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+            "error": "Invalid request body",
+        })
+    }
+
+    err := uc.service.ResetPassword(req.Token, req.NewPassword)
+    if err != nil {
+        return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+            "error": err.Error(),
+        })
+    }
+
+    return c.JSON(fiber.Map{
+        "message": "Password reset successful",
+    })
+}

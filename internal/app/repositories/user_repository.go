@@ -102,3 +102,42 @@ func (r *UserRepository) FindByUsername(username string) (*models.User, error) {
     }
     return &user, nil
 }
+
+// GetUserByEmail ดึงข้อมูลผู้ใช้จากตาราง users ด้วย email
+func (r *UserRepository) FindByEmail(email string) (*models.User, error) {
+    var user models.User
+    query := "SELECT id, username, email, password FROM users WHERE email = ?"
+    err := db.DB.QueryRow(query, email).
+        Scan(&user.ID, &user.Username, &user.Email, &user.Password)
+    if err != nil {
+        if err == sql.ErrNoRows {
+            return nil, nil
+        }
+        return nil, fmt.Errorf("FindByEmail: %w", err)
+    }
+    return &user, nil
+}
+
+// GetUserByResetToken ดึงข้อมูลผู้ใช้จาก reset token (และ token ยังไม่หมดอายุ)
+func (r *UserRepository) GetUserByResetToken(token string) (*models.User, error) {
+    var user models.User
+    query := "SELECT id, username, email, password FROM users WHERE reset_token = ? AND reset_token_expiry > NOW()"
+    err := db.DB.QueryRow(query, token).Scan(&user.ID, &user.Username, &user.Email, &user.Password)
+    if err != nil {
+        if err == sql.ErrNoRows {
+            return nil, nil
+        }
+        return nil, fmt.Errorf("GetUserByResetToken: %w", err)
+    }
+    return &user, nil
+}
+
+// UpdatePassword อัปเดตรหัสผ่านในตาราง users
+func (r *UserRepository) UpdatePassword(userID uint, hashedPassword string) error {
+    query := "UPDATE users SET password = ? WHERE id = ?"
+    _, err := db.DB.Exec(query, hashedPassword, userID)
+    if err != nil {
+        return fmt.Errorf("UpdatePassword: %w", err)
+    }
+    return nil
+}
