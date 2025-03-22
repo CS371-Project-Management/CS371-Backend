@@ -1,0 +1,17 @@
+### GET request to example server
+GET https://examples.http-client.intellij.net/get
+    ?generated-in=IntelliJ IDEA
+
+### Create Course
+POST http://localhost:8080/api1/course
+Content-Type: application/json
+
+{
+  "class_id": "0195c01d-fe86-72fc-8302-7ca7e3b0ef69",
+  "title": "Math",
+  "description": "Mathematics",
+  "difficulty_level": "medidum",
+  "number" : 1
+}
+
+###

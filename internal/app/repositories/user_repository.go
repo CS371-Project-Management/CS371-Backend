@@ -1,143 +1,145 @@
 package repositories
 
 import (
-    "database/sql"
-    "errors"
-    "fmt"
 	"cs371-backend/db"
 	"cs371-backend/internal/app/models"
+	"database/sql"
+	"errors"
+	"fmt"
+	"github.com/google/uuid"
 )
 
 type UserRepository struct{}
 
 func NewUserRepository() *UserRepository {
-    return &UserRepository{}
+	return &UserRepository{}
 }
 
 // ข้อมูลผู้ใช้ทั้งหมด
 func (r *UserRepository) FindAll() ([]models.User, error) {
-    var users []models.User
+	var users []models.User
 
-    query := "SELECT id, username, email, password FROM users"
-    rows, err := db.DB.Query(query)
-    if err != nil {
-        return nil, fmt.Errorf("FindAll: error executing query: %w", err)
-    }
-    defer rows.Close()
+	query := "SELECT id, username, email, password FROM users"
+	rows, err := db.DB.Query(query)
+	if err != nil {
+		return nil, fmt.Errorf("FindAll: error executing query: %w", err)
+	}
+	defer rows.Close()
 
-    for rows.Next() {
-        var user models.User
-        if err := rows.Scan(&user.ID, &user.Username, &user.Email, &user.Password); err != nil {
-            return nil, fmt.Errorf("FindAll: error scanning row: %w", err)
-        }
-        users = append(users, user)
-    }
+	for rows.Next() {
+		var user models.User
+		if err := rows.Scan(&user.ID, &user.Username, &user.Email, &user.Password); err != nil {
+			return nil, fmt.Errorf("FindAll: error scanning row: %w", err)
+		}
+		users = append(users, user)
+	}
 
-    if err := rows.Err(); err != nil {
-        return nil, fmt.Errorf("FindAll: error iterating rows: %w", err)
-    }
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("FindAll: error iterating rows: %w", err)
+	}
 
-    return users, nil
+	return users, nil
 }
 
-//ดึงข้อมูลผู้ใช้ด้วย ID
+// ดึงข้อมูลผู้ใช้ด้วย ID
 func (r *UserRepository) FindByID(id uint) (*models.User, error) {
-    var user models.User
+	var user models.User
 
-    query := "SELECT id, username, email, password FROM users WHERE id = ?"
-    err := db.DB.QueryRow(query, id).
-        Scan(&user.ID, &user.Username, &user.Email, &user.Password)
-    if err != nil {
-        if errors.Is(err, sql.ErrNoRows) {
-            // ไม่พบข้อมูล
-            return nil, nil
-        }
-        return nil, fmt.Errorf("FindByID: error executing query: %w", err)
-    }
+	query := "SELECT id, username, email, password FROM users WHERE id = ?"
+	err := db.DB.QueryRow(query, id).
+		Scan(&user.ID, &user.Username, &user.Email, &user.Password)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			// ไม่พบข้อมูล
+			return nil, nil
+		}
+		return nil, fmt.Errorf("FindByID: error executing query: %w", err)
+	}
 
-    return &user, nil
+	return &user, nil
 }
 
-//เพิ่มผู้ใช้ใหม่
+// เพิ่มผู้ใช้ใหม่
 func (r *UserRepository) Create(user *models.User) error {
-    query := "INSERT INTO users (username, email, password) VALUES (?, ?, ?)"
-    _, err := db.DB.Exec(query, user.Username, user.Email, user.Password)
-    if err != nil {
-        return fmt.Errorf("Create: error inserting user: %w", err)
-    }
-    return nil
+	user.ID = uuid.New().String()
+	query := "INSERT INTO users (id ,username, email, password, first_name, last_name, role) VALUES (?, ?, ?, ?, ?, ?, ?)"
+	_, err := db.DB.Exec(query, user.ID, user.Username, user.Email, user.Password, user.FirstName, user.LastName, user.Role)
+	if err != nil {
+		return fmt.Errorf("Create: error inserting user: %w", err)
+	}
+	return nil
 }
 
 // แก้ไขข้อมูล
 func (r *UserRepository) Update(user *models.User) error {
-    query := "UPDATE users SET username = ?, email = ?, password = ? WHERE id = ?"
-    _, err := db.DB.Exec(query, user.Username, user.Email, user.Password, user.ID)
-    if err != nil {
-        return fmt.Errorf("Update: error updating user: %w", err)
-    }
-    return nil
+	query := "UPDATE users SET username = ?, email = ?, password = ? WHERE id = ?"
+	_, err := db.DB.Exec(query, user.Username, user.Email, user.Password, user.ID)
+	if err != nil {
+		return fmt.Errorf("Update: error updating user: %w", err)
+	}
+	return nil
 }
 
 // ลบผู้ใช้ตาม ID
 func (r *UserRepository) Delete(id uint) error {
-    query := "DELETE FROM users WHERE id = ?"
-    _, err := db.DB.Exec(query, id)
-    if err != nil {
-        return fmt.Errorf("Delete: error deleting user: %w", err)
-    }
-    return nil
+	query := "DELETE FROM users WHERE id = ?"
+	_, err := db.DB.Exec(query, id)
+	if err != nil {
+		return fmt.Errorf("Delete: error deleting user: %w", err)
+	}
+	return nil
 }
 
 // FindByUsername ดึงข้อมูลผู้ใช้จากตาราง users ด้วย username
 func (r *UserRepository) FindByUsername(username string) (*models.User, error) {
-    var user models.User
-    query := "SELECT id, username, email, password FROM users WHERE username = ?"
-    err := db.DB.QueryRow(query, username).Scan(&user.ID, &user.Username, &user.Email, &user.Password)
-    if err != nil {
-        if err == sql.ErrNoRows {
-            // ไม่พบข้อมูล
-            return nil, nil
-        }
-        return nil, fmt.Errorf("FindByUsername error: %w", err)
-    }
-    return &user, nil
+	var user models.User
+	query := "SELECT id, username, email, password FROM users WHERE username = ?"
+	err := db.DB.QueryRow(query, username).Scan(&user.ID, &user.Username, &user.Email, &user.Password)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			// ไม่พบข้อมูล
+			return nil, nil
+		}
+		return nil, fmt.Errorf("FindByUsername error: %w", err)
+	}
+	return &user, nil
 }
 
 // GetUserByEmail ดึงข้อมูลผู้ใช้จากตาราง users ด้วย email
 func (r *UserRepository) FindByEmail(email string) (*models.User, error) {
-    var user models.User
-    query := "SELECT id, username, email, password FROM users WHERE email = ?"
-    err := db.DB.QueryRow(query, email).
-        Scan(&user.ID, &user.Username, &user.Email, &user.Password)
-    if err != nil {
-        if err == sql.ErrNoRows {
-            return nil, nil
-        }
-        return nil, fmt.Errorf("FindByEmail: %w", err)
-    }
-    return &user, nil
+	var user models.User
+	query := "SELECT id, username, email, password FROM users WHERE email = ?"
+	err := db.DB.QueryRow(query, email).
+		Scan(&user.ID, &user.Username, &user.Email, &user.Password)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("FindByEmail: %w", err)
+	}
+	return &user, nil
 }
 
 // GetUserByResetToken ดึงข้อมูลผู้ใช้จาก reset token (และ token ยังไม่หมดอายุ)
-func (r *UserRepository) GetUserByResetToken(token string) (*models.User, error) {
-    var user models.User
-    query := "SELECT id, username, email, password FROM users WHERE reset_token = ? AND reset_token_expiry > NOW()"
-    err := db.DB.QueryRow(query, token).Scan(&user.ID, &user.Username, &user.Email, &user.Password)
-    if err != nil {
-        if err == sql.ErrNoRows {
-            return nil, nil
-        }
-        return nil, fmt.Errorf("GetUserByResetToken: %w", err)
-    }
-    return &user, nil
-}
+//func (r *UserRepository) GetUserByResetToken(token string) (*models.User, error) {
+//    var user models.User
+//    query := "SELECT id, username, email, password FROM users WHERE reset_token = ? AND reset_token_expiry > NOW()"
+//    err := db.DB.QueryRow(query, token).Scan(&user.ID, &user.Username, &user.Email, &user.Password)
+//    if err != nil {
+//        if err == sql.ErrNoRows {
+//            return nil, nil
+//        }
+//        return nil, fmt.Errorf("GetUserByResetToken: %w", err)
+//    }
+//    return &user, nil
+//}
 
 // UpdatePassword อัปเดตรหัสผ่านในตาราง users
 func (r *UserRepository) UpdatePassword(userID uint, hashedPassword string) error {
-    query := "UPDATE users SET password = ? WHERE id = ?"
-    _, err := db.DB.Exec(query, hashedPassword, userID)
-    if err != nil {
-        return fmt.Errorf("UpdatePassword: %w", err)
-    }
-    return nil
+	query := "UPDATE users SET password = ? WHERE id = ?"
+	_, err := db.DB.Exec(query, hashedPassword, userID)
+	if err != nil {
+		return fmt.Errorf("UpdatePassword: %w", err)
+	}
+	return nil
 }

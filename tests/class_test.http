@@ -1,0 +1,6 @@
+### GET request to example server
+
+### Create Course
+#POST http://localhost:3000/api1/courses
+
+###
