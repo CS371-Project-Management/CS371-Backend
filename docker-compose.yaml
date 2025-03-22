@@ -42,6 +42,22 @@ services:
       - mysql_data:/var/lib/mysql
       # - ./mysql-config:/etc/mysql/conf.d
 
+  migrate:
+    image: migrate/migrate
+    container_name: cs371-migrate
+    command: [
+      "-database", "mysql://root:${DB_PASSWORD}@tcp(cs371-db:${DB_PORT})/${DB_NAME}?multiStatements=true",
+      "-path", "/migrations",
+      "up"
+    ]
+    volumes:
+      - ./db/migrations:/migrations
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - app-network
+
 networks:
   app-network:
     driver: bridge
