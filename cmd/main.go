@@ -11,6 +11,15 @@ import (
 )
 
 func init() {
+
+	//check
+	log.Println("DB_HOST:", config.GetEnv("DB_HOST", ""))
+	log.Println("DB_PORT:", config.GetEnv("DB_PORT", ""))
+	log.Println("DB_USER:", config.GetEnv("DB_USER", ""))
+	log.Println("DB_PASSWORD:", config.GetEnv("DB_PASSWORD", ""))
+	log.Println("DB_NAME:", config.GetEnv("DB_NAME", ""))
+	//check
+
 	if err := config.LoadConfig(); err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}
@@ -19,9 +28,9 @@ func init() {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 
-	if err := db.RunMigrations(); err != nil {
-		log.Fatalf("Failed to run migrations: %v", err)
-	}
+	// if err := db.RunMigrations(); err != nil {
+	// 	log.Fatalf("Failed to run migrations: %v", err)
+	// }
 
 	// Seed
 	//seeder := seeders.NewSeeder()
