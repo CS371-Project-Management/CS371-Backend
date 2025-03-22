@@ -5,6 +5,7 @@ import (
 	"cs371-backend/db"
 	"cs371-backend/internal/app/routes"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"log"
@@ -54,6 +55,12 @@ func main() {
 		},
 	})
 
+	app.Use(cors.New(cors.Config{
+		AllowOrigins:     "http://localhost:3000, http://0.0.0.0:3000",
+		AllowMethods:     "GET,POST,PUT,PATCH,DELETE",
+		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
+		AllowCredentials: true,
+	}))
 	app.Use(logger.New())
 	app.Use(recover.New())
 
