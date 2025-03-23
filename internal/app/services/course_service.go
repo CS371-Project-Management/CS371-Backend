@@ -15,6 +15,14 @@ func NewCourseService() *CourseService {
 	}
 }
 
-func (s *CourseService) CreateCourse(course *models.Course) error {
-	return s.repo.CreateCourse(course)
+func (s *CourseService) CreateCourse(course *models.CreateCourseRequest) error {
+	return s.repo.Create(course)
+}
+
+func (s *CourseService) UpdateCourse(course *models.UpdateCourseRequest) error {
+	return s.repo.Update(course)
+}
+
+func (s *CourseService) GetCoursesByClassID(classID string) ([]models.Course, error) {
+	return s.repo.FindByClassId(classID)
 }

@@ -24,5 +24,7 @@ func SetupRoutes(app *fiber.App) {
 	api1.Post("/reset-password", userController.ResetPassword)
 
 	courseController := controllers.NewCourseController()
-	api1.Post("/course", courseController.CreateCourse)
+	api1.Get("/courses/:classID", courseController.GetCoursesByClassID)
+	api1.Post("/courses", courseController.CreateCourse)
+	api1.Put("/course/:id", courseController.UpdateCourse)
 }
