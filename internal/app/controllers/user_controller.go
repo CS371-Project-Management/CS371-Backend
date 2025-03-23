@@ -27,48 +27,43 @@ func (c *UserController) Logout(ctx *fiber.Ctx) error {
 	})
 }
 
-// LoginHandler รับ username/password แล้วส่งผลลัพธ์ตาม Sequence
+// controllers/UserController.go
 func (uc *UserController) LoginHandler(c *fiber.Ctx) error {
-    // 1) รับ JSON Body
-    var req struct {
-        Username string `json:"username"`
-        Password string `json:"password"`
-    }
-    if err := c.BodyParser(&req); err != nil {
-        // 400 Bad Request
-        return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-            "error": "Invalid request body",
-        })
-    }
+	// รับ JSON Body
+	var req struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid request body",
+		})
+	}
 
-    token, err := uc.service.Login(req.Username, req.Password)
-    if err != nil {
-        // แยกเคส error
-        switch err.Error() {
-        case "user not found":
-            // 404 Not Found
-            return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-                "error": "User not found",
-            })
-        case "invalid password":
-            // 401 Unauthorized
-            return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-                "error": "Invalid username or password",
-            })
-        default:
-            //อื่น ๆ
-            return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-                "error": err.Error(),
-            })
-        }
-    }
+	userID, token, err := uc.service.Login(req.Username, req.Password)
+	if err != nil {
+		switch err.Error() {
+		case "user not found":
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"error": "User not found",
+			})
+		case "invalid password":
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"error": "Invalid username or password",
+			})
+		default:
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		}
+	}
 
-    // 3) Login สำเร็จ -> 200 OK
-    // ส่ง token กลับ
-    return c.JSON(fiber.Map{
-        "message": "Login successful",
-        "token":   token,
-    })
+	// ส่งกลับผลลัพธ์
+	return c.JSON(fiber.Map{
+		"message": "Login successful",
+		"token":   token,
+		"user_id": userID,
+	})
 }
 
 // GetAllUsers ดึงผู้ใช้ทั้งหมด

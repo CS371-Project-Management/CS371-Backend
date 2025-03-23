@@ -27,24 +27,22 @@ func NewUserService() *UserService {
 	}
 }
 
-func (s *UserService) Login(username, password string) (string, error) {
-	// user ตาม username
+func (s *UserService) Login(username, password string) (uint, string, error) {
+	// ค้นหาผู้ใช้จาก username
 	user, err := s.repo.FindByUsername(username)
 	if err != nil {
-		return "", err
+		return 0, "", err
 	}
 	if user == nil {
-		// ไม่มี user
-		return "", errors.New("user not found")
+		return 0, "", errors.New("user not found")
 	}
 
-	// ตรวจสอบ password ด้วย bcrypt
+	// ตรวจสอบรหัสผ่านด้วย bcrypt
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
-		// password ไม่ตรง
-		return "", errors.New("invalid password")
+		return 0, "", errors.New("invalid password")
 	}
 
-	// สร้าง JWT token
+	// สร้าง JWT token พร้อมกับรวม user id และ username ใน claims
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id":  user.ID,
 		"username": user.Username,
@@ -53,10 +51,10 @@ func (s *UserService) Login(username, password string) (string, error) {
 
 	tokenString, err := token.SignedString(jwtSecret)
 	if err != nil {
-		return "", err
+		return 0, "", err
 	}
 
-	return tokenString, nil
+	return user.ID, tokenString, nil
 }
 
 func (s *UserService) GetAllUsers() ([]models.User, error) {
