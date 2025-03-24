@@ -50,3 +50,12 @@ func (r *ChoiceAnswerRepository) GetChoiceAnswerByQuizID(id string) ([]models.Ch
 
 	return answers, nil
 }
+
+func (r *ChoiceAnswerRepository) DeleteChoiceAnswerByID(answerID string) error {
+	query := "DELETE FROM choice_answers WHERE id = ?"
+	_, err := db.DB.Exec(query, answerID)
+	if err != nil {
+		return fmt.Errorf("DeleteChoiceAnswerByID: error executing query: %w", err)
+	}
+	return nil
+}

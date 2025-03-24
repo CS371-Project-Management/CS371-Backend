@@ -37,3 +37,12 @@ func (r *OrderingQuizRepository) GetOrderingByQuizID(id string) (*models.Orderin
 
 	return quiz, nil
 }
+
+func (r *OrderingQuizRepository) DeleteOrderingQuizByID(quizID string) error {
+	query := "DELETE FROM ordering_quizzes WHERE quiz_id = ?"
+	_, err := db.DB.Exec(query, quizID)
+	if err != nil {
+		return fmt.Errorf("DeleteOrderingQuizByID: error executing query: %w", err)
+	}
+	return nil
+}

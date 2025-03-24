@@ -37,3 +37,12 @@ func (r *MissingWordQuizRepository) GetMissingWordByQuizID(id string) (*models.M
 
 	return quiz, nil
 }
+
+func (r *MissingWordQuizRepository) DeleteMissingWordQuizByID(quizID string) error {
+	query := "DELETE FROM missing_words_quizzes WHERE quiz_id = ?"
+	_, err := db.DB.Exec(query, quizID)
+	if err != nil {
+		return fmt.Errorf("DeleteMissingWordQuizByID: error executing query: %w", err)
+	}
+	return nil
+}

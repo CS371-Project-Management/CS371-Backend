@@ -50,3 +50,12 @@ func (r *OrderingAnswerRepository) GetOrderingAnswerByQuizID(id string) ([]model
 
 	return answers, nil
 }
+
+func (r *OrderingAnswerRepository) DeleteOrderingAnswerByID(answerID string) error {
+	query := "DELETE FROM ordering_answers WHERE id = ?"
+	_, err := db.DB.Exec(query, answerID)
+	if err != nil {
+		return fmt.Errorf("DeleteOrderingAnswerByID: error executing query: %w", err)
+	}
+	return nil
+}

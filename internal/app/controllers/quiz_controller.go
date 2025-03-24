@@ -61,3 +61,30 @@ func (c *QuizController) GetAllQuizByCourseID(ctx *fiber.Ctx) error {
 		"quizzes": quizzes,
 	})
 }
+
+func (c *QuizController) DeleteQuizByID(ctx *fiber.Ctx) error {
+	quizID := ctx.Params("quiz_id")
+
+	err := c.quizService.DeleteQuizByID(quizID)
+	if err != nil {
+		if strings.Contains(err.Error(), "no quiz found with id") {
+			return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"error": "Quiz not found",
+			})
+		}
+
+		if strings.Contains(err.Error(), "error deleting quiz") {
+			return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		}
+
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "Quiz deleted successfully",
+	})
+}

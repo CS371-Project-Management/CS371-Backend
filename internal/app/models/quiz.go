@@ -14,14 +14,7 @@ type Quiz struct {
 	ID       string   `json:"id" db:"id"`
 	CourseID string   `json:"course_id" db:"course_id"`
 	Number   int      `json:"number" db:"number"`
-	QuizType QuizType `json:"quiz_type" db:"quiz_type"`
-	Title    string   `json:"title" db:"title"`
-	Lesson   string   `json:"lesson" db:"lesson"`
-}
-
-type CreateQuiz struct {
-	CourseID string   `json:"course_id" db:"course_id"`
-	Number   int      `json:"number" db:"number"`
+	Point    int      `json:"point" db:"point"`
 	QuizType QuizType `json:"quiz_type" db:"quiz_type"`
 	Title    string   `json:"title" db:"title"`
 	Lesson   string   `json:"lesson" db:"lesson"`

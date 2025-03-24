@@ -3,8 +3,9 @@ POST http://localhost:8080/api1/quizzes
 Content-Type: application/json
 
 {
-  "course_id": "e8cd3f32-3e11-4fa3-b3f2-fffd1b75ccbd",
+  "course_id": "cb8c2a86-de34-4f00-8541-99c4db43bcaf",
   "number": 1,
+  "point": 20,
   "title": "Sample Choice Quiz",
   "lesson": "Lesson 1",
   "quiz_type": "choice",
@@ -33,8 +34,9 @@ POST http://localhost:8080/api1/quizzes
 Content-Type: application/json
 
 {
-  "course_id": "e8cd3f32-3e11-4fa3-b3f2-fffd1b75ccbd",
+  "course_id": "cb8c2a86-de34-4f00-8541-99c4db43bcaf",
   "number": 2,
+  "point": 20,
   "title": "Sample Ordering Quiz",
   "lesson": "Lesson 2",
   "quiz_type": "ordering",
@@ -62,8 +64,9 @@ POST http://localhost:8080/api1/quizzes
 Content-Type: application/json
 
 {
-  "course_id": "e8cd3f32-3e11-4fa3-b3f2-fffd1b75ccbd",
+  "course_id": "cb8c2a86-de34-4f00-8541-99c4db43bcaf",
   "number": 3,
+  "point": 20,
   "title": "Sample Missing Word Quiz",
   "lesson": "Lesson 3",
   "quiz_type": "missing_words",
@@ -74,7 +77,93 @@ Content-Type: application/json
 }
 
 ### Get Quiz By Course ID
-GET http://localhost:8080/api1/quizzes/e8cd3f32-3e11-4fa3-b3f2-fffd1b75ccbd
-Content-Type: application/json
+GET http://localhost:8080/api1/quizzes/cb8c2a86-de34-4f00-8541-99c4db43bcaf
+
+  "quizzes": [
+    {
+      "id": "24c95a60-93fa-43ee-889d-1687bc9e8778",
+      "quiz_type": "choice",
+      "course_id": "cb8c2a86-de34-4f00-8541-99c4db43bcaf",
+      "point": 20,
+      "number": 1,
+      "title": "Sample Choice Quiz",
+      "lesson": "Lesson 1",
+      "choice_data": {
+        "question": "What is 2 + 2?",
+        "type": "single",
+        "answers": [
+          {
+            "answer": "4",
+            "result": true
+          },
+          {
+            "answer": "3",
+            "result": false
+          },
+          {
+            "answer": "5",
+            "result": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "4bd563c8-4d62-473f-adb9-76af007384a9",
+      "quiz_type": "choice",
+      "course_id": "cb8c2a86-de34-4f00-8541-99c4db43bcaf",
+      "point": 20,
+      "number": 1,
+      "title": "Sample Choice Quiz",
+      "lesson": "Lesson 1",
+      "choice_data": {
+        "question": "What is 2 + 2?",
+        "type": "single",
+        "answers": [
+          {
+            "answer": "4",
+            "result": true
+          },
+          {
+            "answer": "3",
+            "result": false
+          },
+          {
+            "answer": "5",
+            "result": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "a62a49ce-3074-4335-aac1-87ed3427753e",
+      "quiz_type": "ordering",
+      "course_id": "cb8c2a86-de34-4f00-8541-99c4db43bcaf",
+      "point": 20,
+      "number": 2,
+      "title": "Sample Ordering Quiz",
+      "lesson": "Lesson 2",
+      "ordering_data": {
+        "question": "Order the numbers from smallest to largest",
+        "answers": [
+          {
+            "answer": "2",
+            "order": 2
+          },
+          {
+            "answer": "1",
+            "order": 1
+          },
+          {
+            "answer": "3",
+            "order": 3
+          }
+        ]
+      }
+    }
+  ]
+}
+
+### Delete Quiz
+DELETE http://localhost:8080/api1/quizzes/ba779aab-1703-4289-9d35-1cbd8778e08f
 
 ###

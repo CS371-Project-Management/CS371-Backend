@@ -5,5 +5,5 @@ CREATE TABLE IF NOT EXISTS ordering_histories
     answer          TEXT     NOT NULL,
     `order`           INT      NOT NULL,
     result          BOOLEAN  NOT NULL,
-    FOREIGN KEY (quiz_history_id) REFERENCES quiz_histories (id)
+    FOREIGN KEY (quiz_history_id) REFERENCES quiz_histories (id) ON DELETE CASCADE
 );

@@ -6,12 +6,14 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 )
 
 type CreateQuizRequest struct {
 	ID              string                     `json:"id,omitempty"`
 	QuizType        string                     `json:"quiz_type"`
 	CourseID        string                     `json:"course_id"`
+	Point           int                        `json:"point"`
 	Number          int                        `json:"number"`
 	Title           string                     `json:"title"`
 	Lesson          string                     `json:"lesson"`
@@ -74,6 +76,7 @@ func (s *QuizService) CreateQuiz(request *CreateQuizRequest) (*models.Quiz, erro
 
 	quiz := new(models.Quiz)
 	quiz.CourseID = request.CourseID
+	quiz.Point = request.Point
 	quiz.Number = request.Number
 	quiz.QuizType = quizType
 	quiz.Title = request.Title
@@ -184,6 +187,7 @@ func (s *QuizService) GetAllQuizByCourseID(courseID string) ([]CreateQuizRequest
 			quizRequest := CreateQuizRequest{
 				ID:       quiz.ID,
 				QuizType: models.QuizTypeToString(quiz.QuizType),
+				Point:    quiz.Point,
 				CourseID: quiz.CourseID,
 				Number:   quiz.Number,
 				Title:    quiz.Title,
@@ -218,6 +222,7 @@ func (s *QuizService) GetAllQuizByCourseID(courseID string) ([]CreateQuizRequest
 			quizRequest := CreateQuizRequest{
 				ID:       quiz.ID,
 				QuizType: models.QuizTypeToString(quiz.QuizType),
+				Point:    quiz.Point,
 				CourseID: quiz.CourseID,
 				Number:   quiz.Number,
 				Title:    quiz.Title,
@@ -238,6 +243,7 @@ func (s *QuizService) GetAllQuizByCourseID(courseID string) ([]CreateQuizRequest
 			quizRequest := CreateQuizRequest{
 				ID:       quiz.ID,
 				QuizType: models.QuizTypeToString(quiz.QuizType),
+				Point:    quiz.Point,
 				CourseID: quiz.CourseID,
 				Number:   quiz.Number,
 				Title:    quiz.Title,
@@ -260,4 +266,17 @@ func (s *QuizService) GetAllQuizByCourseID(courseID string) ([]CreateQuizRequest
 	}
 
 	return nil, fmt.Errorf("no quizzes found for course ID: %s", courseID)
+}
+
+func (s *QuizService) DeleteQuizByID(quizID string) error {
+	log.Println("Service: Deleting quiz with id: ", quizID)
+	err := s.quizRepository.DeleteQuizByID(quizID)
+	if err != nil {
+		if strings.Contains(err.Error(), "no quiz found with id") {
+			return fmt.Errorf("Quiz not found: %w", err)
+		}
+		return fmt.Errorf("Error deleting quiz: %w", err)
+	}
+
+	return nil
 }
