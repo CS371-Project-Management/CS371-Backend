@@ -30,3 +30,23 @@ func (r *ChoiceAnswerRepository) CreateChoiceAnswer(answer *models.ChoiceAnswer)
 
 	return nil
 }
+
+func (r *ChoiceAnswerRepository) GetChoiceAnswerByQuizID(id string) ([]models.ChoiceAnswer, error) {
+	query := "SELECT id, quiz_id, answer, result FROM choice_answers WHERE quiz_id = ?"
+	rows, err := db.DB.Query(query, id)
+	if err != nil {
+		return nil, fmt.Errorf("GetChoiceAnswerQuizID: error executing query: %w", err)
+	}
+
+	var answers []models.ChoiceAnswer
+	for rows.Next() {
+		var answer models.ChoiceAnswer
+		err = rows.Scan(&answer.ID, &answer.QuizID, &answer.Answer, &answer.Result)
+		if err != nil {
+			return nil, fmt.Errorf("GetChoiceAnswerQuizID: error scanning row: %w", err)
+		}
+		answers = append(answers, answer)
+	}
+
+	return answers, nil
+}

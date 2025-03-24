@@ -25,3 +25,15 @@ func (r *OrderingQuizRepository) CreateOrderingQuiz(ordering *models.OrderingQui
 
 	return nil
 }
+
+func (r *OrderingQuizRepository) GetOrderingByQuizID(id string) (*models.OrderingQuiz, error) {
+	quiz := new(models.OrderingQuiz)
+
+	query := "SELECT quiz_id, question FROM ordering_quizzes WHERE quiz_id = ?"
+	err := db.DB.QueryRow(query, id).Scan(&quiz.QuizID, &quiz.Question)
+	if err != nil {
+		return nil, fmt.Errorf("GetOrderingQuizID: error scanning row: %w", err)
+	}
+
+	return quiz, nil
+}

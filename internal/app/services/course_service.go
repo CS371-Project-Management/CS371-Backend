@@ -3,6 +3,7 @@ package services
 import (
 	"cs371-backend/internal/app/models"
 	"cs371-backend/internal/app/repositories"
+	"fmt"
 )
 
 type CourseService struct {
@@ -26,7 +27,14 @@ func (s *CourseService) UpdateCourse(course *models.UpdateCourseRequest) error {
 }
 
 func (s *CourseService) GetCoursesByClassID(classID string) ([]models.Course, error) {
-	return s.courseRepository.FindByClassId(classID)
+	courses, err := s.courseRepository.FindByClassId(classID)
+	if err != nil {
+		return nil, err
+	}
+	if len(courses) == 0 {
+		return nil, fmt.Errorf("no courses found for classID: %s", classID)
+	}
+	return courses, nil
 }
 
 func (s *CourseService) EnrollCourse(userCourse *models.UserCourse) error {

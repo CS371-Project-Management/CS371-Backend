@@ -25,3 +25,15 @@ func (r *ChoiceQuizRepository) CreateChoiceQuiz(choice *models.ChoiceQuiz) error
 
 	return nil
 }
+
+func (r *ChoiceQuizRepository) GetChoiceByQuizID(id string) (*models.ChoiceQuiz, error) {
+	quiz := new(models.ChoiceQuiz)
+
+	query := "SELECT quiz_id, question, type FROM choice_quizzes WHERE quiz_id = ?"
+	err := db.DB.QueryRow(query, id).Scan(&quiz.QuizID, &quiz.Question, &quiz.Type)
+	if err != nil {
+		return nil, fmt.Errorf("GetChoiceQuizID: error scanning row: %w", err)
+	}
+
+	return quiz, nil
+}

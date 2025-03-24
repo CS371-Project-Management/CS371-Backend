@@ -4,9 +4,12 @@ import (
 	"cs371-backend/internal/app/models"
 	"cs371-backend/internal/app/repositories"
 	"errors"
+	"fmt"
+	"log"
 )
 
 type CreateQuizRequest struct {
+	ID              string                     `json:"id,omitempty"`
 	QuizType        string                     `json:"quiz_type"`
 	CourseID        string                     `json:"course_id"`
 	Number          int                        `json:"number"`
@@ -147,4 +150,114 @@ func (s *QuizService) CreateQuiz(request *CreateQuizRequest) (*models.Quiz, erro
 
 	}
 	return quiz, nil
+}
+
+func (s *QuizService) GetAllQuizByCourseID(courseID string) ([]CreateQuizRequest, error) {
+	quizzes, err := s.quizRepository.GetAllQuizByCourseID(courseID)
+	if err != nil {
+		return nil, err
+	}
+
+	var quizRequests []CreateQuizRequest
+
+	for _, quiz := range quizzes {
+		switch quiz.QuizType {
+		case models.QuizTypeChoice:
+			choiceQuiz, err := s.choiceRepository.GetChoiceByQuizID(quiz.ID)
+			if err != nil {
+				return nil, err
+			}
+
+			choiceAnswers, err := s.choiceAnswerRepository.GetChoiceAnswerByQuizID(quiz.ID)
+			if err != nil {
+				return nil, err
+			}
+
+			answers := make([]ChoiceAnswer, 0)
+			for _, answer := range choiceAnswers {
+				answers = append(answers, ChoiceAnswer{
+					Answer: answer.Answer,
+					Result: answer.Result,
+				})
+			}
+
+			quizRequest := CreateQuizRequest{
+				ID:       quiz.ID,
+				QuizType: models.QuizTypeToString(quiz.QuizType),
+				CourseID: quiz.CourseID,
+				Number:   quiz.Number,
+				Title:    quiz.Title,
+				Lesson:   quiz.Lesson,
+				ChoiceData: &CreateChoiceQuizData{
+					Question: choiceQuiz.Question,
+					Type:     models.ChoiceTypeToString(choiceQuiz.Type),
+					Answers:  answers,
+				},
+			}
+			quizRequests = append(quizRequests, quizRequest)
+
+		case models.QuizTypeOrdering:
+			orderingQuiz, err := s.orderQuizRepository.GetOrderingByQuizID(quiz.ID)
+			if err != nil {
+				return nil, err
+			}
+
+			orderingAnswers, err := s.orderAnswerRepository.GetOrderingAnswerByQuizID(quiz.ID)
+			if err != nil {
+				return nil, err
+			}
+
+			answers := make([]OrderingAnswer, 0)
+			for _, answer := range orderingAnswers {
+				answers = append(answers, OrderingAnswer{
+					Answer: answer.Answer,
+					Order:  answer.Order,
+				})
+			}
+
+			quizRequest := CreateQuizRequest{
+				ID:       quiz.ID,
+				QuizType: models.QuizTypeToString(quiz.QuizType),
+				CourseID: quiz.CourseID,
+				Number:   quiz.Number,
+				Title:    quiz.Title,
+				Lesson:   quiz.Lesson,
+				OrderingData: &CreateOrderingQuizData{
+					Question: orderingQuiz.Question,
+					Answers:  answers,
+				},
+			}
+			quizRequests = append(quizRequests, quizRequest)
+
+		case models.QuizTypeMissingWords:
+			missingWordQuiz, err := s.missingWordRepository.GetMissingWordByQuizID(quiz.ID)
+			if err != nil {
+				return nil, err
+			}
+
+			quizRequest := CreateQuizRequest{
+				ID:       quiz.ID,
+				QuizType: models.QuizTypeToString(quiz.QuizType),
+				CourseID: quiz.CourseID,
+				Number:   quiz.Number,
+				Title:    quiz.Title,
+				Lesson:   quiz.Lesson,
+				MissingWordData: &CreateMissingWordQuizData{
+					Question: missingWordQuiz.Question,
+					Answer:   missingWordQuiz.Answer,
+				},
+			}
+			quizRequests = append(quizRequests, quizRequest)
+
+		default:
+			return nil, fmt.Errorf("unsupported quiz type: %s", quiz.QuizType)
+		}
+		log.Println(len(quizRequests))
+	}
+
+	if len(quizRequests) > 0 {
+		return quizRequests, nil
+	}
+
+	return nil, fmt.Errorf("no quizzes found for course ID: %s", courseID)
 }

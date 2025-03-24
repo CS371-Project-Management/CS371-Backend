@@ -39,3 +39,7 @@ func ValidateQuizType(quizType string) (QuizType, error) {
 		return "", fmt.Errorf("invalid quiz type: %s", quizType)
 	}
 }
+
+func QuizTypeToString(quizType QuizType) string {
+	return string(quizType)
+}

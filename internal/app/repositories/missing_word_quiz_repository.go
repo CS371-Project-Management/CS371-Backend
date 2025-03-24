@@ -14,7 +14,7 @@ func NewMissingWordQuizRepository() *MissingWordQuizRepository {
 
 func (r *MissingWordQuizRepository) CreateMissingWordQuiz(missingWord *models.MissingWordQuiz) error {
 	query := `
-    INSERT INTO missing_word_quizzes (quiz_id, question, answer)
+    INSERT INTO missing_words_quizzes (quiz_id, question, answer)
     VALUES (?, ?, ?)
   `
 
@@ -24,4 +24,16 @@ func (r *MissingWordQuizRepository) CreateMissingWordQuiz(missingWord *models.Mi
 	}
 
 	return nil
+}
+
+func (r *MissingWordQuizRepository) GetMissingWordByQuizID(id string) (*models.MissingWordQuiz, error) {
+	quiz := new(models.MissingWordQuiz)
+
+	query := "SELECT quiz_id, question, answer FROM missing_words_quizzes WHERE quiz_id = ?"
+	err := db.DB.QueryRow(query, id).Scan(&quiz.QuizID, &quiz.Question, &quiz.Answer)
+	if err != nil {
+		return nil, fmt.Errorf("GetMissingWordQuizID: error scanning row: %w", err)
+	}
+
+	return quiz, nil
 }

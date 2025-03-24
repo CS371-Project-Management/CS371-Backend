@@ -4,6 +4,7 @@ import (
 	"cs371-backend/internal/app/models"
 	"cs371-backend/internal/app/services"
 	"github.com/gofiber/fiber/v2"
+	"strings"
 )
 
 type CourseController struct {
@@ -16,12 +17,21 @@ func NewCourseController() *CourseController {
 	}
 }
 
-// GetCoursesByClassID ดึงข้อมูล course ทั้งหมดจาก classID
 func (c *CourseController) GetCoursesByClassID(ctx *fiber.Ctx) error {
 	classID := ctx.Params("classID")
 
 	courses, err := c.service.GetCoursesByClassID(classID)
 	if err != nil {
+		if strings.Contains(err.Error(), "error executing query") {
+			return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		} else if strings.Contains(err.Error(), "no courses found") {
+			return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		}
+
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": err.Error(),
 		})
@@ -30,7 +40,6 @@ func (c *CourseController) GetCoursesByClassID(ctx *fiber.Ctx) error {
 	return ctx.Status(fiber.StatusOK).JSON(courses)
 }
 
-// CreateCourse สร้าง course ใหม่
 func (c *CourseController) CreateCourse(ctx *fiber.Ctx) error {
 	course := new(models.CreateCourseRequest)
 	if err := ctx.BodyParser(course); err != nil {
@@ -40,6 +49,11 @@ func (c *CourseController) CreateCourse(ctx *fiber.Ctx) error {
 	}
 
 	if err := c.service.CreateCourse(course); err != nil {
+		if strings.Contains(err.Error(), "error executing query") {
+			return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		}
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": err.Error(),
 		})
@@ -61,6 +75,11 @@ func (c *CourseController) UpdateCourse(ctx *fiber.Ctx) error {
 	course.ID = id
 
 	if err := c.service.UpdateCourse(course); err != nil {
+		if strings.Contains(err.Error(), "error executing query") {
+			return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		}
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": err.Error(),
 		})

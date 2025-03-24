@@ -25,3 +25,7 @@ func ValidateChoiceType(choiceType string) (ChoiceType, error) {
 		return "", fmt.Errorf("Invalid choice type: %s", choiceType)
 	}
 }
+
+func ChoiceTypeToString(choiceType ChoiceType) string {
+	return string(choiceType)
+}

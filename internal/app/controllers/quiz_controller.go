@@ -4,6 +4,7 @@ import (
 	"cs371-backend/internal/app/services"
 	"github.com/gofiber/fiber/v2"
 	"log"
+	"strings"
 )
 
 type QuizController struct {
@@ -26,6 +27,12 @@ func (c *QuizController) CreateChoiceQuiz(ctx *fiber.Ctx) error {
 
 	quiz, err := c.quizService.CreateQuiz(request)
 	if err != nil {
+		if strings.Contains(err.Error(), "invalid quiz type") == true {
+			return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+		} else if strings.Contains(err.Error(), "error executing query") == true {
+			return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+		}
+
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 
@@ -34,4 +41,23 @@ func (c *QuizController) CreateChoiceQuiz(ctx *fiber.Ctx) error {
 		"quiz":    quiz,
 	})
 
+}
+
+func (c *QuizController) GetAllQuizByCourseID(ctx *fiber.Ctx) error {
+	courseID := ctx.Params("course_id")
+
+	quizzes, err := c.quizService.GetAllQuizByCourseID(courseID)
+	if err != nil {
+		if strings.Contains(err.Error(), "error executing query") == true {
+			return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+		} else if strings.Contains(err.Error(), "no quizzes found") == true {
+			return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": err.Error()})
+		}
+
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{
+		"quizzes": quizzes,
+	})
 }

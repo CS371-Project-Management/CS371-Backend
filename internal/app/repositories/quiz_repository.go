@@ -27,3 +27,23 @@ func (r *QuizRepository) Create(quiz *models.Quiz) error {
 	}
 	return nil
 }
+
+func (r *QuizRepository) GetAllQuizByCourseID(courseID string) ([]models.Quiz, error) {
+	query := "SELECT id, course_id, number, quiz_type, title, lesson FROM quizzes WHERE course_id = ?"
+	rows, err := db.DB.Query(query, courseID)
+	if err != nil {
+		return nil, fmt.Errorf("GetAllQuizByCourseID: error executing query: %w", err)
+	}
+
+	var quizzes []models.Quiz
+	for rows.Next() {
+		var quiz models.Quiz
+		err = rows.Scan(&quiz.ID, &quiz.CourseID, &quiz.Number, &quiz.QuizType, &quiz.Title, &quiz.Lesson)
+		if err != nil {
+			return nil, fmt.Errorf("GetAllQuizByCourseID: error scanning row: %w", err)
+		}
+		quizzes = append(quizzes, quiz)
+	}
+
+	return quizzes, nil
+}
