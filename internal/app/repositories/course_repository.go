@@ -3,9 +3,9 @@ package repositories
 import (
 	"cs371-backend/db"
 	"cs371-backend/internal/app/models"
+	"cs371-backend/internal/app/utils"
 	"database/sql"
 	"fmt"
-	"github.com/google/uuid"
 	"log"
 )
 
@@ -15,9 +15,13 @@ type CourseRepository struct {
 func NewCourseRepository() *CourseRepository { return &CourseRepository{} }
 
 func (r *CourseRepository) Create(course *models.CreateCourseRequest) error {
-	id := uuid.New().String()
-	query := "INSERT INTO courses (id ,class_id, number, title, description, difficulty_level) VALUES (?,?, ?, ?, ?, ?)"
-	_, err := db.DB.Exec(query, id, course.ClassID, course.Number, course.Title, course.Description, course.DifficultyLevel)
+	id, err := utils.GenerateUniqueID(db.DB, "courses", "id")
+	if err != nil {
+		return fmt.Errorf("Error generating unique UUID: %w", err)
+	}
+
+	query := "INSERT INTO courses (id, class_id, number, title, description, difficulty_level) VALUES (?, ?, ?, ?, ?, ?)"
+	_, err = db.DB.Exec(query, id, course.ClassID, course.Number, course.Title, course.Description, course.DifficultyLevel)
 	if err != nil {
 		return fmt.Errorf("Create: error executing query: %w", err)
 	}

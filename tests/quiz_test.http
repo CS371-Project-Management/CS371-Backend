@@ -1,0 +1,31 @@
+### Quiz Create Choice
+POST http://localhost:8080/api1/quizzes
+Content-Type: application/json
+
+{
+  "course_id": "1d7eb585-6119-490a-a307-98aa148bfed7",
+  "number": 1,
+  "title": "Sample Choice Quiz",
+  "lesson": "Lesson 1",
+  "quiz_type": "choice",
+  "choice_data": {
+    "question": "What is 2 + 2?",
+    "type": "single",
+    "answers": [
+      {
+        "answer": "3",
+        "result": false
+      },
+      {
+        "answer": "4",
+        "result": true
+      },
+      {
+        "answer": "5",
+        "result": false
+      }
+    ]
+  }
+}
+
+###

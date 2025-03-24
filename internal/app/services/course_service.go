@@ -6,23 +6,29 @@ import (
 )
 
 type CourseService struct {
-	repo *repositories.CourseRepository
+	courseRepository     *repositories.CourseRepository
+	userCourseRepository *repositories.UserCourseRepository
 }
 
 func NewCourseService() *CourseService {
 	return &CourseService{
-		repo: repositories.NewCourseRepository(),
+		courseRepository:     repositories.NewCourseRepository(),
+		userCourseRepository: repositories.NewUserCourseRepository(),
 	}
 }
 
 func (s *CourseService) CreateCourse(course *models.CreateCourseRequest) error {
-	return s.repo.Create(course)
+	return s.courseRepository.Create(course)
 }
 
 func (s *CourseService) UpdateCourse(course *models.UpdateCourseRequest) error {
-	return s.repo.Update(course)
+	return s.courseRepository.Update(course)
 }
 
 func (s *CourseService) GetCoursesByClassID(classID string) ([]models.Course, error) {
-	return s.repo.FindByClassId(classID)
+	return s.courseRepository.FindByClassId(classID)
+}
+
+func (s *CourseService) EnrollCourse(userCourse *models.UserCourse) error {
+	return s.userCourseRepository.Create(userCourse)
 }

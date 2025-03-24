@@ -27,4 +27,8 @@ func SetupRoutes(app *fiber.App) {
 	api1.Get("/courses/:classID", courseController.GetCoursesByClassID)
 	api1.Post("/courses", courseController.CreateCourse)
 	api1.Put("/course/:id", courseController.UpdateCourse)
+
+	quizController := controllers.NewQuizController()
+	api1.Post("/quizzes", quizController.CreateChoiceQuiz)
+
 }

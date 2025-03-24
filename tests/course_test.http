@@ -3,14 +3,14 @@ GET https://examples.http-client.intellij.net/get
     ?generated-in=IntelliJ IDEA
 
 ### Create Course
-POST http://localhost:8080/api1/course
+POST http://localhost:8080/api1/courses
 Content-Type: application/json
 
 {
   "class_id": "0195c01d-fe86-72fc-8302-7ca7ebb0ef69",
   "title": "Math",
   "description": "Mathematics",
-  "difficulty_level": "medidum",
+  "difficulty_level": "medium",
   "number" : 1
 }
 

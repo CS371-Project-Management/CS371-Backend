@@ -4,5 +4,5 @@ CREATE TABLE IF NOT EXISTS ordering_answers
     quiz_id CHAR(36) NOT NULL,
     answer  TEXT     NOT NULL,
     `order`   INT      NOT NULL,
-    FOREIGN KEY (quiz_id) REFERENCES ordering_quizzes (id)
+    FOREIGN KEY (quiz_id) REFERENCES ordering_quizzes (quiz_id)
 );

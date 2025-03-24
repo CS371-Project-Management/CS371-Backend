@@ -3,10 +3,10 @@ package repositories
 import (
 	"cs371-backend/db"
 	"cs371-backend/internal/app/models"
+	"cs371-backend/internal/app/utils"
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/google/uuid"
 )
 
 type UserRepository struct{}
@@ -61,9 +61,15 @@ func (r *UserRepository) FindByID(id uint) (*models.User, error) {
 
 // เพิ่มผู้ใช้ใหม่
 func (r *UserRepository) Create(user *models.User) error {
-	user.ID = uuid.New().String()
+
+	id, err := utils.GenerateUniqueID(db.DB, "users", "id")
+	if err != nil {
+		return fmt.Errorf("Error generating unique UUID: %w", err)
+	}
+	user.ID = id
+
 	query := "INSERT INTO users (id ,username, email, password, first_name, last_name, role) VALUES (?, ?, ?, ?, ?, ?, ?)"
-	_, err := db.DB.Exec(query, user.ID, user.Username, user.Email, user.Password, user.FirstName, user.LastName, user.Role)
+	_, err = db.DB.Exec(query, user.ID, user.Username, user.Email, user.Password, user.FirstName, user.LastName, user.Role)
 	if err != nil {
 		return fmt.Errorf("Create: error inserting user: %w", err)
 	}
