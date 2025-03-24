@@ -4,7 +4,6 @@ import (
 	"cs371-backend/internal/app/models"
 	"cs371-backend/internal/app/repositories"
 	"errors"
-	"log"
 )
 
 type CreateQuizRequest struct {
@@ -48,6 +47,9 @@ type QuizService struct {
 	quizRepository         *repositories.QuizRepository
 	choiceRepository       *repositories.ChoiceQuizRepository
 	choiceAnswerRepository *repositories.ChoiceAnswerRepository
+	orderQuizRepository    *repositories.OrderingQuizRepository
+	orderAnswerRepository  *repositories.OrderingAnswerRepository
+	missingWordRepository  *repositories.MissingWordQuizRepository
 }
 
 func NewQuizService() *QuizService {
@@ -55,6 +57,9 @@ func NewQuizService() *QuizService {
 		quizRepository:         repositories.NewQuizRepository(),
 		choiceRepository:       repositories.NewChoiceQuizRepository(),
 		choiceAnswerRepository: repositories.NewChoiceAnswerRepository(),
+		orderQuizRepository:    repositories.NewOrderingQuizRepository(),
+		orderAnswerRepository:  repositories.NewOrderingAnswerRepository(),
+		missingWordRepository:  repositories.NewMissingWordQuizRepository(),
 	}
 }
 
@@ -76,9 +81,6 @@ func (s *QuizService) CreateQuiz(request *CreateQuizRequest) (*models.Quiz, erro
 		return nil, err
 	}
 
-	log.Println("Quiz ID: " + quiz.ID)
-
-	log.Println(quizType == models.QuizTypeChoice)
 	switch quizType {
 	case models.QuizTypeChoice:
 		choiceType, err := models.ValidateChoiceType(request.ChoiceData.Type)
@@ -90,8 +92,6 @@ func (s *QuizService) CreateQuiz(request *CreateQuizRequest) (*models.Quiz, erro
 		choiceQuiz.QuizID = quiz.ID
 		choiceQuiz.Question = request.ChoiceData.Question
 		choiceQuiz.Type = choiceType
-
-		log.Println(choiceQuiz.QuizID, choiceQuiz.Question, choiceQuiz.Type)
 
 		err = s.choiceRepository.CreateChoiceQuiz(choiceQuiz)
 		if err != nil {
@@ -110,8 +110,38 @@ func (s *QuizService) CreateQuiz(request *CreateQuizRequest) (*models.Quiz, erro
 			}
 		}
 	case models.QuizTypeOrdering:
+		orderingQuiz := new(models.OrderingQuiz)
+		orderingQuiz.QuizID = quiz.ID
+		orderingQuiz.Question = request.OrderingData.Question
+
+		err = s.orderQuizRepository.CreateOrderingQuiz(orderingQuiz)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, answer := range request.OrderingData.Answers {
+			orderingAnswer := new(models.OrderingAnswer)
+			orderingAnswer.QuizID = quiz.ID
+			orderingAnswer.Answer = answer.Answer
+			orderingAnswer.Order = answer.Order
+
+			err = s.orderAnswerRepository.CreateOrderingAnswer(orderingAnswer)
+			if err != nil {
+				return nil, err
+			}
+		}
 
 	case models.QuizTypeMissingWords:
+		missingWordQuiz := new(models.MissingWordQuiz)
+		missingWordQuiz.QuizID = quiz.ID
+		missingWordQuiz.Question = request.MissingWordData.Question
+		missingWordQuiz.Answer = request.MissingWordData.Answer
+
+		err = s.missingWordRepository.CreateMissingWordQuiz(missingWordQuiz)
+		if err != nil {
+			return nil, err
+		}
+
 	default:
 		return nil, errors.New("unsupported quiz type")
 
