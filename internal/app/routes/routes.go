@@ -6,18 +6,29 @@ import (
 )
 
 func SetupRoutes(app *fiber.App) {
-	app.Get("/test-db", controllers.TestDBConnection)
+	api1 := app.Group("/api1")
+
+	api1.Get("/test-db", controllers.TestDBConnection)
+
 	userController := controllers.NewUserController()
-    // Use userController to set up user-related routes
-	app.Get("/users", userController.GetAllUsers)
-	app.Get("/users/:id", userController.GetUser)
-	app.Post("/users", userController.CreateUser)
-	app.Put("/users/:id", userController.UpdateUser)
-	app.Delete("/users/:id", userController.DeleteUser)
+	api1.Get("/users", userController.GetAllUsers)
+	api1.Get("/users/:id", userController.GetUser)
+	api1.Post("/users", userController.CreateUser)
+	api1.Put("/users/:id", userController.UpdateUser)
+	api1.Delete("/users/:id", userController.DeleteUser)
 
-	app.Post("/login", userController.LoginHandler)
-	app.Post("/logout", userController.Logout)
+	api1.Post("/login", userController.LoginHandler)
+	api1.Post("/logout", userController.Logout)
 
-	app.Post("/request-reset-password", userController.RequestResetPassword)
-	app.Post("/reset-password", userController.ResetPassword)
+	api1.Post("/request-reset-password", userController.RequestResetPassword)
+	api1.Post("/reset-password", userController.ResetPassword)
+
+	courseController := controllers.NewCourseController()
+	api1.Get("/courses/:classID", courseController.GetCoursesByClassID)
+	api1.Post("/courses", courseController.CreateCourse)
+	api1.Put("/courses/:id", courseController.UpdateCourse)
+
+	quizController := controllers.NewQuizController()
+	api1.Post("/quizzes", quizController.CreateChoiceQuiz)
+	api1.Get("/quizzes/:course_id", quizController.GetAllQuizByCourseID)
 }

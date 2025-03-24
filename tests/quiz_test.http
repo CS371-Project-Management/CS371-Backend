@@ -1,0 +1,80 @@
+### Create Quiz Choice
+POST http://localhost:8080/api1/quizzes
+Content-Type: application/json
+
+{
+  "course_id": "e8cd3f32-3e11-4fa3-b3f2-fffd1b75ccbd",
+  "number": 1,
+  "title": "Sample Choice Quiz",
+  "lesson": "Lesson 1",
+  "quiz_type": "choice",
+  "choice_data": {
+    "question": "What is 2 + 2?",
+    "type": "single",
+    "answers": [
+      {
+        "answer": "3",
+        "result": false
+      },
+      {
+        "answer": "4",
+        "result": true
+      },
+      {
+        "answer": "5",
+        "result": false
+      }
+    ]
+  }
+}
+
+### Create Quiz Ordering
+POST http://localhost:8080/api1/quizzes
+Content-Type: application/json
+
+{
+  "course_id": "e8cd3f32-3e11-4fa3-b3f2-fffd1b75ccbd",
+  "number": 2,
+  "title": "Sample Ordering Quiz",
+  "lesson": "Lesson 2",
+  "quiz_type": "ordering",
+  "ordering_data": {
+    "question": "Order the numbers from smallest to largest",
+    "answers": [
+      {
+        "answer": "1",
+        "order": 1
+      },
+      {
+        "answer": "2",
+        "order": 2
+      },
+      {
+        "answer": "3",
+        "order": 3
+      }
+    ]
+  }
+}
+
+### Create Quiz Missing Word
+POST http://localhost:8080/api1/quizzes
+Content-Type: application/json
+
+{
+  "course_id": "e8cd3f32-3e11-4fa3-b3f2-fffd1b75ccbd",
+  "number": 3,
+  "title": "Sample Missing Word Quiz",
+  "lesson": "Lesson 3",
+  "quiz_type": "missing_words",
+  "missing_word_data": {
+    "question": "The capital of France is ___",
+    "answer": "Paris"
+  }
+}
+
+### Get Quiz By Course ID
+GET http://localhost:8080/api1/quizzes/e8cd3f32-3e11-4fa3-b3f2-fffd1b75ccbd
+Content-Type: application/json
+
+###

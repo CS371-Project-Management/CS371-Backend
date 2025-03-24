@@ -1,0 +1,31 @@
+### GET request to example server
+GET https://examples.http-client.intellij.net/get
+    ?generated-in=IntelliJ IDEA
+
+### Create Course
+POST http://localhost:8080/api1/courses
+Content-Type: application/json
+
+{
+  "class_id": "0195c9aa-b773-77a0-bed1-6e2c7eaf8079",
+  "title": "Math",
+  "description": "Mathematics",
+  "difficulty_level": "medium",
+  "number" : 1
+}
+
+### Get Courses by Class ID
+GET http://localhost:8080/api1/courses/0195c9aa-b773-77a0-bed1-6e2c7eaf8079
+
+### Update Course
+PUT http://localhost:8080/api1/courses/0195c9aa-b773-77a0-bed1-6e2c7eaf8079
+Content-Type: application/json
+
+{
+  "title": "Mathematics",
+  "description": "Mathematics",
+  "difficulty_level": "medium",
+  "number" : 1
+}
+
+###
