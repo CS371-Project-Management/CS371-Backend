@@ -3,7 +3,6 @@ package services
 import (
 	"errors"
 	"fmt"
-
 	"golang.org/x/crypto/bcrypt"
 
 	"cs371-backend/internal/app/models"
@@ -27,19 +26,19 @@ func NewUserService() *UserService {
 	}
 }
 
-func (s *UserService) Login(username, password string) (uint, string, error) {
+func (s *UserService) Login(username, password string) (string, string, error) {
 	// ค้นหาผู้ใช้จาก username
 	user, err := s.repo.FindByUsername(username)
 	if err != nil {
-		return 0, "", err
+		return "", "", err
 	}
 	if user == nil {
-		return 0, "", errors.New("user not found")
+		return "", "", errors.New("user not found")
 	}
 
 	// ตรวจสอบรหัสผ่านด้วย bcrypt
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
-		return 0, "", errors.New("invalid password")
+		return "", "", errors.New("invalid password")
 	}
 
 	// สร้าง JWT token พร้อมกับรวม user id และ username ใน claims
@@ -51,7 +50,7 @@ func (s *UserService) Login(username, password string) (uint, string, error) {
 
 	tokenString, err := token.SignedString(jwtSecret)
 	if err != nil {
-		return 0, "", err
+		return "", "", err
 	}
 
 	return user.ID, tokenString, nil
@@ -96,7 +95,7 @@ func (s *UserService) UpdateUser(user *models.User) error {
 	return s.repo.Update(user)
 }
 
-func (s *UserService) DeleteUser(id uint) error {
+func (s *UserService) DeleteUser(id string) error {
 	return s.repo.Delete(id)
 }
 
@@ -146,12 +145,11 @@ func (s *UserService) ResetPassword(tokenString, newPassword string) error {
 		return errors.New("invalid token claims")
 	}
 
-	// ดึง user_id จาก claims
-	userIDFloat, ok := claims["user_id"].(float64)
+	// ดึง user_id จาก claims (เป็น string)
+	userID, ok := claims["user_id"].(string)
 	if !ok {
 		return errors.New("invalid user_id in token")
 	}
-	userID := uint(userIDFloat)
 
 	// แฮชรหัสผ่านใหม่
 	hashed, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
