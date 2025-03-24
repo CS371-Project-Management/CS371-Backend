@@ -36,14 +36,14 @@ func (s *UserService) Login(username, password string) (string, string, error) {
 		return "", "", errors.New("user not found")
 	}
 
-	// ตรวจสอบรหัสผ่านด้วย bcrypt
+	// ตรวจสอบ password
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
 		return "", "", errors.New("invalid password")
 	}
 
-	// สร้าง JWT token พร้อมกับรวม user id และ username ใน claims
+	// สร้าง JWT token พร้อมกับ claims ที่มี user_id
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"user_id":  user.ID,
+		"user_id":  user.ID, // user id ที่ได้จากฐานข้อมูล
 		"username": user.Username,
 		"exp":      time.Now().Add(7 * 24 * time.Hour).Unix(),
 	})

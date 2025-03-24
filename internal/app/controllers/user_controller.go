@@ -40,6 +40,7 @@ func (uc *UserController) LoginHandler(c *fiber.Ctx) error {
 		})
 	}
 
+	// เรียก service Login ที่คืนค่า userID, token, err
 	userID, token, err := uc.service.Login(req.Username, req.Password)
 	if err != nil {
 		switch err.Error() {
@@ -58,13 +59,14 @@ func (uc *UserController) LoginHandler(c *fiber.Ctx) error {
 		}
 	}
 
-	// ส่งกลับผลลัพธ์
+	// ส่งกลับ response พร้อม user_id
 	return c.JSON(fiber.Map{
 		"message": "Login successful",
 		"token":   token,
 		"user_id": userID,
 	})
 }
+
 
 // GetAllUsers ดึงผู้ใช้ทั้งหมด
 func (c *UserController) GetAllUsers(ctx *fiber.Ctx) error {
