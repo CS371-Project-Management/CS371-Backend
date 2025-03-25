@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 
@@ -79,25 +78,23 @@ func (c *UserController) GetAllUsers(ctx *fiber.Ctx) error {
 	return ctx.JSON(users)
 }
 
-// GetUser ดึงข้อมูลผู้ใช้ด้วย ID
 func (c *UserController) GetUser(ctx *fiber.Ctx) error {
-	id, err := strconv.ParseUint(ctx.Params("id"), 10, 32)
-	if err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid ID",
-		})
-	}
+    id := ctx.Params("id")
+    if id == "" {
+        return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+            "error": "Invalid ID",
+        })
+    }
 
-	user, err := c.service.GetUserByID(uint(id))
-	if err != nil {
-		// ใน Service หรือ Repo อาจ return error ถ้าหาไม่เจอ
-		return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{
-			"error": "User not found",
-		})
-	}
-
-	return ctx.JSON(user)
+    user, err := c.service.GetUserByID(id)
+    if err != nil {
+        return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{
+            "error": "User not found",
+        })
+    }
+    return ctx.JSON(user)
 }
+
 
 // CreateUser สร้างผู้ใช้ใหม่
 func (c *UserController) CreateUser(ctx *fiber.Ctx) error {

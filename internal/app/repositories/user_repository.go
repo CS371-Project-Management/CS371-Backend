@@ -19,7 +19,7 @@ func NewUserRepository() *UserRepository {
 func (r *UserRepository) FindAll() ([]models.User, error) {
 	var users []models.User
 
-	query := "SELECT id, username, email, password FROM users"
+	query := "SELECT id, username, email, password,role,first_name,last_name FROM users"
 	rows, err := db.DB.Query(query)
 	if err != nil {
 		return nil, fmt.Errorf("FindAll: error executing query: %w", err)
@@ -28,7 +28,7 @@ func (r *UserRepository) FindAll() ([]models.User, error) {
 
 	for rows.Next() {
 		var user models.User
-		if err := rows.Scan(&user.ID, &user.Username, &user.Email, &user.Password); err != nil {
+		if err := rows.Scan(&user.ID, &user.Username, &user.Email, &user.Password,&user.Role,&user.FirstName,&user.LastName); err != nil {
 			return nil, fmt.Errorf("FindAll: error scanning row: %w", err)
 		}
 		users = append(users, user)
@@ -41,22 +41,19 @@ func (r *UserRepository) FindAll() ([]models.User, error) {
 	return users, nil
 }
 
-// ดึงข้อมูลผู้ใช้ด้วย ID
-func (r *UserRepository) FindByID(id uint) (*models.User, error) {
-	var user models.User
+func (r *UserRepository) FindByID(id string) (*models.User, error) {
+    var user models.User
 
-	query := "SELECT id, username, email, password FROM users WHERE id = ?"
-	err := db.DB.QueryRow(query, id).
-		Scan(&user.ID, &user.Username, &user.Email, &user.Password)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			// ไม่พบข้อมูล
-			return nil, nil
-		}
-		return nil, fmt.Errorf("FindByID: error executing query: %w", err)
-	}
+    query := "SELECT id, username, email, password, role, first_name , last_name FROM users WHERE id = ?"
+    err := db.DB.QueryRow(query, id).Scan(&user.ID, &user.Username, &user.Email, &user.Password, &user.Role, &user.FirstName, &user.LastName)
+    if err != nil {
+        if errors.Is(err, sql.ErrNoRows) {
+            return nil, nil // ไม่พบข้อมูล
+        }
+        return nil, fmt.Errorf("FindByID: error executing query: %w", err)
+    }
 
-	return &user, nil
+    return &user, nil
 }
 
 // เพิ่มผู้ใช้ใหม่

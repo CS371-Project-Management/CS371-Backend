@@ -60,8 +60,8 @@ func (s *UserService) GetAllUsers() ([]models.User, error) {
 	return s.repo.FindAll()
 }
 
-func (s *UserService) GetUserByID(id uint) (*models.User, error) {
-	return s.repo.FindByID(id)
+func (s *UserService) GetUserByID(id string) (*models.User, error) {
+    return s.repo.FindByID(id)
 }
 
 // CreateUser ตรวจสอบซ้ำ username + แฮช password ก่อนบันทึก
