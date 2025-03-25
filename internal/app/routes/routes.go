@@ -41,4 +41,7 @@ func SetupRoutes(app *fiber.App) {
 	api1.Delete("/classes/:id", classController.DeleteClassHandler)	
 
 	api1.Get("/classes/:id/invite_code", classController.GetInviteCodeHandler)
+
+	api1.Post("/classes/:id/join-public", classController.JoinPublicClassHandler)
+	api1.Post("/classes/join-private", classController.JoinPrivateClassHandler)
 }
