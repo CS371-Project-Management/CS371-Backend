@@ -1,8 +1,8 @@
 package services
 
 import (
-	"cs371-backend/internal/app/models"
-	"cs371-backend/internal/app/repositories"
+	quiz2 "cs371-backend/internal/app/models/quiz"
+	"cs371-backend/internal/app/repositories/quiz"
 	"errors"
 	"fmt"
 	"log"
@@ -49,32 +49,32 @@ type CreateMissingWordQuizData struct {
 }
 
 type QuizService struct {
-	quizRepository         *repositories.QuizRepository
-	choiceRepository       *repositories.ChoiceQuizRepository
-	choiceAnswerRepository *repositories.ChoiceAnswerRepository
-	orderQuizRepository    *repositories.OrderingQuizRepository
-	orderAnswerRepository  *repositories.OrderingAnswerRepository
-	missingWordRepository  *repositories.MissingWordQuizRepository
+	quizRepository         *quiz.QuizRepository
+	choiceRepository       *quiz.ChoiceQuizRepository
+	choiceAnswerRepository *quiz.ChoiceAnswerRepository
+	orderQuizRepository    *quiz.OrderingQuizRepository
+	orderAnswerRepository  *quiz.OrderingAnswerRepository
+	missingWordRepository  *quiz.MissingWordQuizRepository
 }
 
 func NewQuizService() *QuizService {
 	return &QuizService{
-		quizRepository:         repositories.NewQuizRepository(),
-		choiceRepository:       repositories.NewChoiceQuizRepository(),
-		choiceAnswerRepository: repositories.NewChoiceAnswerRepository(),
-		orderQuizRepository:    repositories.NewOrderingQuizRepository(),
-		orderAnswerRepository:  repositories.NewOrderingAnswerRepository(),
-		missingWordRepository:  repositories.NewMissingWordQuizRepository(),
+		quizRepository:         quiz.NewQuizRepository(),
+		choiceRepository:       quiz.NewChoiceQuizRepository(),
+		choiceAnswerRepository: quiz.NewChoiceAnswerRepository(),
+		orderQuizRepository:    quiz.NewOrderingQuizRepository(),
+		orderAnswerRepository:  quiz.NewOrderingAnswerRepository(),
+		missingWordRepository:  quiz.NewMissingWordQuizRepository(),
 	}
 }
 
-func (s *QuizService) CreateQuiz(request *CreateQuizRequest) (*models.Quiz, error) {
-	quizType, err := models.ValidateQuizType(request.QuizType)
+func (s *QuizService) CreateQuiz(request *CreateQuizRequest) (*quiz2.Quiz, error) {
+	quizType, err := quiz2.ValidateQuizType(request.QuizType)
 	if err != nil {
 		return nil, err
 	}
 
-	quiz := new(models.Quiz)
+	quiz := new(quiz2.Quiz)
 	quiz.CourseID = request.CourseID
 	quiz.Point = request.Point
 	quiz.Number = request.Number
@@ -88,13 +88,13 @@ func (s *QuizService) CreateQuiz(request *CreateQuizRequest) (*models.Quiz, erro
 	}
 
 	switch quizType {
-	case models.QuizTypeChoice:
-		choiceType, err := models.ValidateChoiceType(request.ChoiceData.Type)
+	case quiz2.QuizTypeChoice:
+		choiceType, err := quiz2.ValidateChoiceType(request.ChoiceData.Type)
 		if err != nil {
 			return nil, err
 		}
 
-		choiceQuiz := new(models.ChoiceQuiz)
+		choiceQuiz := new(quiz2.ChoiceQuiz)
 		choiceQuiz.QuizID = quiz.ID
 		choiceQuiz.Question = request.ChoiceData.Question
 		choiceQuiz.Type = choiceType
@@ -105,7 +105,7 @@ func (s *QuizService) CreateQuiz(request *CreateQuizRequest) (*models.Quiz, erro
 		}
 
 		for _, answer := range request.ChoiceData.Answers {
-			choiceAnswer := new(models.ChoiceAnswer)
+			choiceAnswer := new(quiz2.ChoiceAnswer)
 			choiceAnswer.QuizID = quiz.ID
 			choiceAnswer.Answer = answer.Answer
 			choiceAnswer.Result = answer.Result
@@ -115,8 +115,8 @@ func (s *QuizService) CreateQuiz(request *CreateQuizRequest) (*models.Quiz, erro
 				return nil, err
 			}
 		}
-	case models.QuizTypeOrdering:
-		orderingQuiz := new(models.OrderingQuiz)
+	case quiz2.QuizTypeOrdering:
+		orderingQuiz := new(quiz2.OrderingQuiz)
 		orderingQuiz.QuizID = quiz.ID
 		orderingQuiz.Question = request.OrderingData.Question
 
@@ -126,7 +126,7 @@ func (s *QuizService) CreateQuiz(request *CreateQuizRequest) (*models.Quiz, erro
 		}
 
 		for _, answer := range request.OrderingData.Answers {
-			orderingAnswer := new(models.OrderingAnswer)
+			orderingAnswer := new(quiz2.OrderingAnswer)
 			orderingAnswer.QuizID = quiz.ID
 			orderingAnswer.Answer = answer.Answer
 			orderingAnswer.Order = answer.Order
@@ -137,8 +137,8 @@ func (s *QuizService) CreateQuiz(request *CreateQuizRequest) (*models.Quiz, erro
 			}
 		}
 
-	case models.QuizTypeMissingWords:
-		missingWordQuiz := new(models.MissingWordQuiz)
+	case quiz2.QuizTypeMissingWords:
+		missingWordQuiz := new(quiz2.MissingWordQuiz)
 		missingWordQuiz.QuizID = quiz.ID
 		missingWordQuiz.Question = request.MissingWordData.Question
 		missingWordQuiz.Answer = request.MissingWordData.Answer
@@ -165,7 +165,7 @@ func (s *QuizService) GetAllQuizByCourseID(courseID string) ([]CreateQuizRequest
 
 	for _, quiz := range quizzes {
 		switch quiz.QuizType {
-		case models.QuizTypeChoice:
+		case quiz2.QuizTypeChoice:
 			choiceQuiz, err := s.choiceRepository.GetChoiceByQuizID(quiz.ID)
 			if err != nil {
 				return nil, err
@@ -186,7 +186,7 @@ func (s *QuizService) GetAllQuizByCourseID(courseID string) ([]CreateQuizRequest
 
 			quizRequest := CreateQuizRequest{
 				ID:       quiz.ID,
-				QuizType: models.QuizTypeToString(quiz.QuizType),
+				QuizType: quiz2.QuizTypeToString(quiz.QuizType),
 				Point:    quiz.Point,
 				CourseID: quiz.CourseID,
 				Number:   quiz.Number,
@@ -194,13 +194,13 @@ func (s *QuizService) GetAllQuizByCourseID(courseID string) ([]CreateQuizRequest
 				Lesson:   quiz.Lesson,
 				ChoiceData: &CreateChoiceQuizData{
 					Question: choiceQuiz.Question,
-					Type:     models.ChoiceTypeToString(choiceQuiz.Type),
+					Type:     quiz2.ChoiceTypeToString(choiceQuiz.Type),
 					Answers:  answers,
 				},
 			}
 			quizRequests = append(quizRequests, quizRequest)
 
-		case models.QuizTypeOrdering:
+		case quiz2.QuizTypeOrdering:
 			orderingQuiz, err := s.orderQuizRepository.GetOrderingByQuizID(quiz.ID)
 			if err != nil {
 				return nil, err
@@ -221,7 +221,7 @@ func (s *QuizService) GetAllQuizByCourseID(courseID string) ([]CreateQuizRequest
 
 			quizRequest := CreateQuizRequest{
 				ID:       quiz.ID,
-				QuizType: models.QuizTypeToString(quiz.QuizType),
+				QuizType: quiz2.QuizTypeToString(quiz.QuizType),
 				Point:    quiz.Point,
 				CourseID: quiz.CourseID,
 				Number:   quiz.Number,
@@ -234,7 +234,7 @@ func (s *QuizService) GetAllQuizByCourseID(courseID string) ([]CreateQuizRequest
 			}
 			quizRequests = append(quizRequests, quizRequest)
 
-		case models.QuizTypeMissingWords:
+		case quiz2.QuizTypeMissingWords:
 			missingWordQuiz, err := s.missingWordRepository.GetMissingWordByQuizID(quiz.ID)
 			if err != nil {
 				return nil, err
@@ -242,7 +242,7 @@ func (s *QuizService) GetAllQuizByCourseID(courseID string) ([]CreateQuizRequest
 
 			quizRequest := CreateQuizRequest{
 				ID:       quiz.ID,
-				QuizType: models.QuizTypeToString(quiz.QuizType),
+				QuizType: quiz2.QuizTypeToString(quiz.QuizType),
 				Point:    quiz.Point,
 				CourseID: quiz.CourseID,
 				Number:   quiz.Number,

@@ -1,8 +1,8 @@
-package repositories
+package quiz
 
 import (
 	"cs371-backend/db"
-	"cs371-backend/internal/app/models"
+	"cs371-backend/internal/app/models/quiz"
 	"fmt"
 )
 
@@ -12,7 +12,7 @@ func NewMissingWordQuizRepository() *MissingWordQuizRepository {
 	return &MissingWordQuizRepository{}
 }
 
-func (r *MissingWordQuizRepository) CreateMissingWordQuiz(missingWord *models.MissingWordQuiz) error {
+func (r *MissingWordQuizRepository) CreateMissingWordQuiz(missingWord *quiz.MissingWordQuiz) error {
 	query := `
     INSERT INTO missing_words_quizzes (quiz_id, question, answer)
     VALUES (?, ?, ?)
@@ -26,8 +26,8 @@ func (r *MissingWordQuizRepository) CreateMissingWordQuiz(missingWord *models.Mi
 	return nil
 }
 
-func (r *MissingWordQuizRepository) GetMissingWordByQuizID(id string) (*models.MissingWordQuiz, error) {
-	quiz := new(models.MissingWordQuiz)
+func (r *MissingWordQuizRepository) GetMissingWordByQuizID(id string) (*quiz.MissingWordQuiz, error) {
+	quiz := new(quiz.MissingWordQuiz)
 
 	query := "SELECT quiz_id, question, answer FROM missing_words_quizzes WHERE quiz_id = ?"
 	err := db.DB.QueryRow(query, id).Scan(&quiz.QuizID, &quiz.Question, &quiz.Answer)

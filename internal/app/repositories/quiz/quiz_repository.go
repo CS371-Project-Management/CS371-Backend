@@ -1,8 +1,8 @@
-package repositories
+package quiz
 
 import (
 	"cs371-backend/db"
-	"cs371-backend/internal/app/models"
+	"cs371-backend/internal/app/models/quiz"
 	"cs371-backend/internal/app/utils"
 	"fmt"
 	"log"
@@ -12,7 +12,7 @@ type QuizRepository struct{}
 
 func NewQuizRepository() *QuizRepository { return &QuizRepository{} }
 
-func (r *QuizRepository) Create(quiz *models.Quiz) error {
+func (r *QuizRepository) Create(quiz *quiz.Quiz) error {
 
 	id, err := utils.GenerateUniqueID(db.DB, "quizzes", "id")
 	if err != nil {
@@ -29,16 +29,16 @@ func (r *QuizRepository) Create(quiz *models.Quiz) error {
 	return nil
 }
 
-func (r *QuizRepository) GetAllQuizByCourseID(courseID string) ([]models.Quiz, error) {
+func (r *QuizRepository) GetAllQuizByCourseID(courseID string) ([]quiz.Quiz, error) {
 	query := "SELECT id, course_id,point, number, quiz_type, title, lesson FROM quizzes WHERE course_id = ?"
 	rows, err := db.DB.Query(query, courseID)
 	if err != nil {
 		return nil, fmt.Errorf("GetAllQuizByCourseID: error executing query: %w", err)
 	}
 
-	var quizzes []models.Quiz
+	var quizzes []quiz.Quiz
 	for rows.Next() {
-		var quiz models.Quiz
+		var quiz quiz.Quiz
 		err = rows.Scan(&quiz.ID, &quiz.CourseID, &quiz.Point, &quiz.Number, &quiz.QuizType, &quiz.Title, &quiz.Lesson)
 		if err != nil {
 			return nil, fmt.Errorf("GetAllQuizByCourseID: error scanning row: %w", err)

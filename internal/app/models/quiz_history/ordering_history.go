@@ -1,4 +1,4 @@
-package models
+package quiz_history
 
 type OrderingHistory struct {
 	ID            string `json:"id" db:"id"`

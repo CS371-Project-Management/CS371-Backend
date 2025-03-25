@@ -1,8 +1,8 @@
-package repositories
+package quiz
 
 import (
 	"cs371-backend/db"
-	"cs371-backend/internal/app/models"
+	"cs371-backend/internal/app/models/quiz"
 	"fmt"
 )
 
@@ -12,7 +12,7 @@ func NewChoiceQuizRepository() *ChoiceQuizRepository {
 	return &ChoiceQuizRepository{}
 }
 
-func (r *ChoiceQuizRepository) CreateChoiceQuiz(choice *models.ChoiceQuiz) error {
+func (r *ChoiceQuizRepository) CreateChoiceQuiz(choice *quiz.ChoiceQuiz) error {
 	query := `
         INSERT INTO choice_quizzes (quiz_id, question, type)
         VALUES (?, ?, ?)
@@ -26,8 +26,8 @@ func (r *ChoiceQuizRepository) CreateChoiceQuiz(choice *models.ChoiceQuiz) error
 	return nil
 }
 
-func (r *ChoiceQuizRepository) GetChoiceByQuizID(id string) (*models.ChoiceQuiz, error) {
-	quiz := new(models.ChoiceQuiz)
+func (r *ChoiceQuizRepository) GetChoiceByQuizID(id string) (*quiz.ChoiceQuiz, error) {
+	quiz := new(quiz.ChoiceQuiz)
 
 	query := "SELECT quiz_id, question, type FROM choice_quizzes WHERE quiz_id = ?"
 	err := db.DB.QueryRow(query, id).Scan(&quiz.QuizID, &quiz.Question, &quiz.Type)
