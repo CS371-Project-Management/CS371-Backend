@@ -2,25 +2,25 @@ package quiz
 
 import "fmt"
 
-type QuizType string
+type Type string
 
 const (
-	QuizTypeChoice       QuizType = "choice"
-	QuizTypeOrdering     QuizType = "ordering"
-	QuizTypeMissingWords QuizType = "missing_words"
+	QuizTypeChoice       Type = "choice"
+	QuizTypeOrdering     Type = "ordering"
+	QuizTypeMissingWords Type = "missing_words"
 )
 
 type Quiz struct {
-	ID       string   `json:"id" db:"id"`
-	CourseID string   `json:"course_id" db:"course_id"`
-	Number   int      `json:"number" db:"number"`
-	Point    int      `json:"point" db:"point"`
-	QuizType QuizType `json:"quiz_type" db:"quiz_type"`
-	Title    string   `json:"title" db:"title"`
-	Lesson   string   `json:"lesson" db:"lesson"`
+	ID       string `json:"id" db:"id"`
+	CourseID string `json:"course_id" db:"course_id"`
+	Number   int    `json:"number" db:"number"`
+	Point    int    `json:"point" db:"point"`
+	QuizType Type   `json:"quiz_type" db:"quiz_type"`
+	Title    string `json:"title" db:"title"`
+	Lesson   string `json:"lesson" db:"lesson"`
 }
 
-func ValidateQuizType(quizType string) (QuizType, error) {
+func ValidateQuizType(quizType string) (Type, error) {
 	switch quizType {
 	case string(QuizTypeChoice):
 		return QuizTypeChoice, nil
@@ -33,6 +33,6 @@ func ValidateQuizType(quizType string) (QuizType, error) {
 	}
 }
 
-func QuizTypeToString(quizType QuizType) string {
+func QuizTypeToString(quizType Type) string {
 	return string(quizType)
 }

@@ -29,3 +29,15 @@ func (r *MissingWordQuizHistoryRepository) CreateMissingWordHistory(missingWordH
 
 	return nil
 }
+
+func (r *MissingWordQuizHistoryRepository) GetMissingWordHistoryByQuizHistoryID(historyID string) (*quiz_history.MissingWordHistory, error) {
+	history := new(quiz_history.MissingWordHistory)
+
+	query := "SELECT id, quiz_history_id, answer, result FROM missing_words_histories WHERE quiz_history_id = ?"
+	err := db.DB.QueryRow(query, historyID).Scan(&history.ID, &history.QuizHistoryID, &history.Answer, &history.Result)
+	if err != nil {
+		return nil, fmt.Errorf("GetMissingWordHistoryByQuizHistoryID: error scanning row: %w", err)
+	}
+
+	return history, nil
+}

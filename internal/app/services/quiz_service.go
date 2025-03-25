@@ -1,11 +1,13 @@
 package services
 
 import (
-	quiz2 "cs371-backend/internal/app/models/quiz"
+	quizmodel "cs371-backend/internal/app/models/quiz"
 	"cs371-backend/internal/app/repositories/quiz"
+	"cs371-backend/internal/app/repositories/quiz_history"
 	"errors"
 	"fmt"
 	"log"
+	"math"
 	"strings"
 )
 
@@ -50,6 +52,7 @@ type CreateMissingWordQuizData struct {
 
 type QuizService struct {
 	quizRepository         *quiz.QuizRepository
+	quizHistoryRepository  *quiz_history.QuizHistoryRepository
 	choiceRepository       *quiz.ChoiceQuizRepository
 	choiceAnswerRepository *quiz.ChoiceAnswerRepository
 	orderQuizRepository    *quiz.OrderingQuizRepository
@@ -60,6 +63,7 @@ type QuizService struct {
 func NewQuizService() *QuizService {
 	return &QuizService{
 		quizRepository:         quiz.NewQuizRepository(),
+		quizHistoryRepository:  quiz_history.NewQuizHistoryRepository(),
 		choiceRepository:       quiz.NewChoiceQuizRepository(),
 		choiceAnswerRepository: quiz.NewChoiceAnswerRepository(),
 		orderQuizRepository:    quiz.NewOrderingQuizRepository(),
@@ -68,13 +72,13 @@ func NewQuizService() *QuizService {
 	}
 }
 
-func (s *QuizService) CreateQuiz(request *CreateQuizRequest) (*quiz2.Quiz, error) {
-	quizType, err := quiz2.ValidateQuizType(request.QuizType)
+func (s *QuizService) CreateQuiz(request *CreateQuizRequest) (*quizmodel.Quiz, error) {
+	quizType, err := quizmodel.ValidateQuizType(request.QuizType)
 	if err != nil {
 		return nil, err
 	}
 
-	quiz := new(quiz2.Quiz)
+	quiz := new(quizmodel.Quiz)
 	quiz.CourseID = request.CourseID
 	quiz.Point = request.Point
 	quiz.Number = request.Number
@@ -88,13 +92,13 @@ func (s *QuizService) CreateQuiz(request *CreateQuizRequest) (*quiz2.Quiz, error
 	}
 
 	switch quizType {
-	case quiz2.QuizTypeChoice:
-		choiceType, err := quiz2.ValidateChoiceType(request.ChoiceData.Type)
+	case quizmodel.QuizTypeChoice:
+		choiceType, err := quizmodel.ValidateChoiceType(request.ChoiceData.Type)
 		if err != nil {
 			return nil, err
 		}
 
-		choiceQuiz := new(quiz2.ChoiceQuiz)
+		choiceQuiz := new(quizmodel.ChoiceQuiz)
 		choiceQuiz.QuizID = quiz.ID
 		choiceQuiz.Question = request.ChoiceData.Question
 		choiceQuiz.Type = choiceType
@@ -105,7 +109,7 @@ func (s *QuizService) CreateQuiz(request *CreateQuizRequest) (*quiz2.Quiz, error
 		}
 
 		for _, answer := range request.ChoiceData.Answers {
-			choiceAnswer := new(quiz2.ChoiceAnswer)
+			choiceAnswer := new(quizmodel.ChoiceAnswer)
 			choiceAnswer.QuizID = quiz.ID
 			choiceAnswer.Answer = answer.Answer
 			choiceAnswer.Result = answer.Result
@@ -115,8 +119,8 @@ func (s *QuizService) CreateQuiz(request *CreateQuizRequest) (*quiz2.Quiz, error
 				return nil, err
 			}
 		}
-	case quiz2.QuizTypeOrdering:
-		orderingQuiz := new(quiz2.OrderingQuiz)
+	case quizmodel.QuizTypeOrdering:
+		orderingQuiz := new(quizmodel.OrderingQuiz)
 		orderingQuiz.QuizID = quiz.ID
 		orderingQuiz.Question = request.OrderingData.Question
 
@@ -126,7 +130,7 @@ func (s *QuizService) CreateQuiz(request *CreateQuizRequest) (*quiz2.Quiz, error
 		}
 
 		for _, answer := range request.OrderingData.Answers {
-			orderingAnswer := new(quiz2.OrderingAnswer)
+			orderingAnswer := new(quizmodel.OrderingAnswer)
 			orderingAnswer.QuizID = quiz.ID
 			orderingAnswer.Answer = answer.Answer
 			orderingAnswer.Order = answer.Order
@@ -137,8 +141,8 @@ func (s *QuizService) CreateQuiz(request *CreateQuizRequest) (*quiz2.Quiz, error
 			}
 		}
 
-	case quiz2.QuizTypeMissingWords:
-		missingWordQuiz := new(quiz2.MissingWordQuiz)
+	case quizmodel.QuizTypeMissingWords:
+		missingWordQuiz := new(quizmodel.MissingWordQuiz)
 		missingWordQuiz.QuizID = quiz.ID
 		missingWordQuiz.Question = request.MissingWordData.Question
 		missingWordQuiz.Answer = request.MissingWordData.Answer
@@ -165,7 +169,7 @@ func (s *QuizService) GetAllQuizByCourseID(courseID string) ([]CreateQuizRequest
 
 	for _, quiz := range quizzes {
 		switch quiz.QuizType {
-		case quiz2.QuizTypeChoice:
+		case quizmodel.QuizTypeChoice:
 			choiceQuiz, err := s.choiceRepository.GetChoiceByQuizID(quiz.ID)
 			if err != nil {
 				return nil, err
@@ -186,7 +190,7 @@ func (s *QuizService) GetAllQuizByCourseID(courseID string) ([]CreateQuizRequest
 
 			quizRequest := CreateQuizRequest{
 				ID:       quiz.ID,
-				QuizType: quiz2.QuizTypeToString(quiz.QuizType),
+				QuizType: quizmodel.QuizTypeToString(quiz.QuizType),
 				Point:    quiz.Point,
 				CourseID: quiz.CourseID,
 				Number:   quiz.Number,
@@ -194,13 +198,13 @@ func (s *QuizService) GetAllQuizByCourseID(courseID string) ([]CreateQuizRequest
 				Lesson:   quiz.Lesson,
 				ChoiceData: &CreateChoiceQuizData{
 					Question: choiceQuiz.Question,
-					Type:     quiz2.ChoiceTypeToString(choiceQuiz.Type),
+					Type:     quizmodel.ChoiceTypeToString(choiceQuiz.Type),
 					Answers:  answers,
 				},
 			}
 			quizRequests = append(quizRequests, quizRequest)
 
-		case quiz2.QuizTypeOrdering:
+		case quizmodel.QuizTypeOrdering:
 			orderingQuiz, err := s.orderQuizRepository.GetOrderingByQuizID(quiz.ID)
 			if err != nil {
 				return nil, err
@@ -221,7 +225,7 @@ func (s *QuizService) GetAllQuizByCourseID(courseID string) ([]CreateQuizRequest
 
 			quizRequest := CreateQuizRequest{
 				ID:       quiz.ID,
-				QuizType: quiz2.QuizTypeToString(quiz.QuizType),
+				QuizType: quizmodel.QuizTypeToString(quiz.QuizType),
 				Point:    quiz.Point,
 				CourseID: quiz.CourseID,
 				Number:   quiz.Number,
@@ -234,7 +238,7 @@ func (s *QuizService) GetAllQuizByCourseID(courseID string) ([]CreateQuizRequest
 			}
 			quizRequests = append(quizRequests, quizRequest)
 
-		case quiz2.QuizTypeMissingWords:
+		case quizmodel.QuizTypeMissingWords:
 			missingWordQuiz, err := s.missingWordRepository.GetMissingWordByQuizID(quiz.ID)
 			if err != nil {
 				return nil, err
@@ -242,7 +246,7 @@ func (s *QuizService) GetAllQuizByCourseID(courseID string) ([]CreateQuizRequest
 
 			quizRequest := CreateQuizRequest{
 				ID:       quiz.ID,
-				QuizType: quiz2.QuizTypeToString(quiz.QuizType),
+				QuizType: quizmodel.QuizTypeToString(quiz.QuizType),
 				Point:    quiz.Point,
 				CourseID: quiz.CourseID,
 				Number:   quiz.Number,
@@ -255,10 +259,7 @@ func (s *QuizService) GetAllQuizByCourseID(courseID string) ([]CreateQuizRequest
 			}
 			quizRequests = append(quizRequests, quizRequest)
 
-		default:
-			return nil, fmt.Errorf("unsupported quiz type: %s", quiz.QuizType)
 		}
-		log.Println(len(quizRequests))
 	}
 
 	if len(quizRequests) > 0 {
@@ -279,4 +280,32 @@ func (s *QuizService) DeleteQuizByID(quizID string) error {
 	}
 
 	return nil
+}
+
+func (s *QuizService) CheckCourseCompletion(courseID, userID string) (map[string]interface{}, error) {
+	// นับจำนวนคำถามทั้งหมดในคอร์ส
+	totalQuizzes, err := s.quizRepository.CountQuizByCourseID(courseID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to count total quizzes: %w", err)
+	}
+
+	// นับจำนวนคำถามที่ตอบแล้ว
+	answeredQuizzes, err := s.quizHistoryRepository.CountAnsweredQuizzes(courseID, userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to count answered quizzes: %w", err)
+	}
+
+	// คำนวณความคืบหน้า
+	progress := 0
+	if totalQuizzes > 0 {
+		progress = int(math.Round(float64(answeredQuizzes) / float64(totalQuizzes) * 100))
+	}
+
+	return map[string]interface{}{
+		"course_id":        courseID,
+		"total_quizzes":    totalQuizzes,
+		"answered_quizzes": answeredQuizzes,
+		"progress_percent": progress,
+		"is_complete":      answeredQuizzes >= totalQuizzes,
+	}, nil
 }

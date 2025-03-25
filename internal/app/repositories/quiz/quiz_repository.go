@@ -5,7 +5,6 @@ import (
 	"cs371-backend/internal/app/models/quiz"
 	"cs371-backend/internal/app/utils"
 	"fmt"
-	"log"
 )
 
 type QuizRepository struct{}
@@ -50,7 +49,6 @@ func (r *QuizRepository) GetAllQuizByCourseID(courseID string) ([]quiz.Quiz, err
 }
 
 func (r *QuizRepository) DeleteQuizByID(quizID string) error {
-	log.Println("Repository: Deleting quiz with id: ", quizID)
 
 	var count int
 	checkQuery := "SELECT COUNT(*) FROM quizzes WHERE id = ?"
@@ -70,4 +68,14 @@ func (r *QuizRepository) DeleteQuizByID(quizID string) error {
 	}
 
 	return nil
+}
+
+func (r *QuizRepository) CountQuizByCourseID(courseID string) (int, error) {
+	var count int
+	query := "SELECT COUNT(*) FROM quizzes WHERE course_id = ?"
+	err := db.DB.QueryRow(query, courseID).Scan(&count)
+	if err != nil {
+		return 0, fmt.Errorf("error counting quizzes: %w", err)
+	}
+	return count, nil
 }

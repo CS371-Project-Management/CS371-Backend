@@ -3,7 +3,6 @@ package controllers
 import (
 	"cs371-backend/internal/app/services"
 	"github.com/gofiber/fiber/v2"
-	"log"
 	"strings"
 )
 
@@ -21,7 +20,6 @@ func (c *QuizController) CreateChoiceQuiz(ctx *fiber.Ctx) error {
 	request := new(services.CreateQuizRequest)
 
 	if err := ctx.BodyParser(request); err != nil {
-		log.Println(request, err)
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
 	}
 
@@ -87,4 +85,19 @@ func (c *QuizController) DeleteQuizByID(ctx *fiber.Ctx) error {
 	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "Quiz deleted successfully",
 	})
+}
+
+func (c *QuizController) GetCourseProgress(ctx *fiber.Ctx) error {
+	courseID := ctx.Params("course_id")
+	userID := ctx.Params("user_id")
+
+	result, err := c.quizService.CheckCourseCompletion(courseID, userID)
+	if err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error":   "Failed to check course progress",
+			"details": err.Error(),
+		})
+	}
+
+	return ctx.JSON(result)
 }

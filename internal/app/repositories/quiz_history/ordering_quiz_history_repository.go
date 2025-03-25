@@ -29,3 +29,24 @@ func (r *OrderingQuizHistoryRepository) CreateOrderingHistory(orderingHistory *q
 
 	return nil
 }
+
+func (r *OrderingQuizHistoryRepository) GetOrderingHistoryByQuizHistoryID(historyID string) ([]quiz_history.OrderingHistory, error) {
+	query := "SELECT id, quiz_history_id, answer, `order`, result FROM ordering_histories WHERE quiz_history_id = ?"
+	rows, err := db.DB.Query(query, historyID)
+	if err != nil {
+		return nil, fmt.Errorf("GetOrderingHistoryByQuizHistoryID: error executing query: %w", err)
+	}
+	defer rows.Close()
+
+	var answers []quiz_history.OrderingHistory
+	for rows.Next() {
+		var answer quiz_history.OrderingHistory
+		err = rows.Scan(&answer.ID, &answer.QuizHistoryID, &answer.Answer, &answer.Order, &answer.Result)
+		if err != nil {
+			return nil, fmt.Errorf("GetOrderingHistoryByQuizHistoryID: error scanning row: %w", err)
+		}
+		answers = append(answers, answer)
+	}
+
+	return answers, nil
+}

@@ -29,3 +29,24 @@ func (r *ChoiceQuizHistoryRepository) CreateChoiceHistory(choiceHistory *quiz_hi
 
 	return nil
 }
+
+func (r *ChoiceQuizHistoryRepository) GetChoiceHistoryByQuizHistoryID(historyID string) ([]quiz_history.ChoiceHistory, error) {
+	query := "SELECT id, quiz_history_id, answer, result FROM choice_histories WHERE quiz_history_id = ?"
+	rows, err := db.DB.Query(query, historyID)
+	if err != nil {
+		return nil, fmt.Errorf("GetChoiceHistoryByQuizHistoryID: error executing query: %w", err)
+	}
+	defer rows.Close()
+
+	var answers []quiz_history.ChoiceHistory
+	for rows.Next() {
+		var answer quiz_history.ChoiceHistory
+		err = rows.Scan(&answer.ID, &answer.QuizHistoryID, &answer.Answer, &answer.Result)
+		if err != nil {
+			return nil, fmt.Errorf("GetChoiceHistoryByQuizHistoryID: error scanning row: %w", err)
+		}
+		answers = append(answers, answer)
+	}
+
+	return answers, nil
+}
