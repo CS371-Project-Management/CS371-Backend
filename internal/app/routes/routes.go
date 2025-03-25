@@ -2,6 +2,8 @@ package routes
 
 import (
 	"cs371-backend/internal/app/controllers"
+	"cs371-backend/internal/app/middlewares"
+
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -32,8 +34,12 @@ func SetupRoutes(app *fiber.App) {
 
 	api1.Get("/classes/:id/invite_code", classController.GetInviteCodeHandler)
 
-	api1.Post("/classes/:id/join-public", classController.JoinPublicClassHandler)
-	api1.Post("/classes/join-private", classController.JoinPrivateClassHandler)
+	api1.Post("/classes/:id/join-public", middlewares.AuthMiddleware,classController.JoinPublicClassHandler)
+	api1.Post("/classes/join-private", middlewares.AuthMiddleware,classController.JoinPrivateClassHandler)
+
+	api1.Post("/classes/leaveClass/:id", middlewares.AuthMiddleware, classController.LeaveClassHandler)
+
+	api1.Delete("/classes/:class_id/users/:user_id", classController.RemoveUserFromClassHandler)
 
 	courseController := controllers.NewCourseController()
 	api1.Get("/courses/class/:classID", courseController.GetCoursesByClassID)

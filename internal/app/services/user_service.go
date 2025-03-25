@@ -3,6 +3,8 @@ package services
 import (
 	"errors"
 	"fmt"
+	"os"
+
 	"golang.org/x/crypto/bcrypt"
 
 	"cs371-backend/internal/app/models"
@@ -27,28 +29,27 @@ func NewUserService() *UserService {
 }
 
 func (s *UserService) Login(username, password string) (string, string, error) {
-	// ค้นหาผู้ใช้จาก username
 	user, err := s.repo.FindByUsername(username)
-	if err != nil {
-		return "", "", err
-	}
-	if user == nil {
-		return "", "", errors.New("user not found")
+	if err != nil || user == nil {
+		return "", "", errors.New("user not found or incorrect password")
 	}
 
-	// ตรวจสอบ password
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
 		return "", "", errors.New("invalid password")
 	}
 
-	// สร้าง JWT token พร้อมกับ claims ที่มี user_id
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		return "", "", errors.New("server misconfiguration: missing JWT_SECRET")
+	}
+
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"user_id":  user.ID, // user id ที่ได้จากฐานข้อมูล
+		"user_id":  user.ID,
 		"username": user.Username,
 		"exp":      time.Now().Add(7 * 24 * time.Hour).Unix(),
 	})
 
-	tokenString, err := token.SignedString(jwtSecret)
+	tokenString, err := token.SignedString([]byte(jwtSecret))
 	if err != nil {
 		return "", "", err
 	}

@@ -5,6 +5,8 @@ import (
 	"cs371-backend/internal/app/models"
 	"database/sql"
 	"errors"
+
+	"github.com/google/uuid"
 )
 
 type ClassRepository struct{}
@@ -15,25 +17,24 @@ func NewClassRepository() *ClassRepository {
 
 // CreateClass - INSERT ลงตาราง classes
 func (r *ClassRepository) CreateClass(class *models.Class) error {
-	query := `
-		INSERT INTO classes (invite_code, title, description, accessibility)
-		VALUES (?, ?, ?, ?)
-	`
-	result, err := db.DB.Exec(query,
-		class.InviteCode,
-		class.Title,
-		class.Description,
-		class.Accessibility,
-	)
-	if err != nil {
-		return err
-	}
-	lastID, err := result.LastInsertId()
-	if err != nil {
-		return err
-	}
-	class.ID = uint(lastID)
-	return nil
+    // ถ้ายังไม่มีค่า ID ให้ gen ใหม่
+    if class.ID == "" {
+        class.ID = uuid.New().String()
+    }
+
+    query := `
+        INSERT INTO classes (id, user_id, invite_code, title, description, accessibility)
+        VALUES (?, ?, ?, ?, ?, ?)
+    `
+    _, err := db.DB.Exec(query,
+        class.ID,
+        class.UserID,
+        class.InviteCode,
+        class.Title,
+        class.Description,
+        class.Accessibility,
+    )
+    return err
 }
 
 // GetAllClasses - SELECT รายการคลาสทั้งหมด
@@ -63,9 +64,9 @@ func (r *ClassRepository) GetAllClasses() ([]models.Class, error) {
 }
 
 // FindClassByID - SELECT class จาก id
-func (r *ClassRepository) FindClassByID(id uint) (*models.Class, error) {
+func (r *ClassRepository) FindClassByID(id string) (*models.Class, error) {
 	query := `
-		SELECT id, invite_code, title, description, accessibility
+		SELECT id, user_id, invite_code, title, description, accessibility
 		FROM classes
 		WHERE id = ?
 	`
@@ -73,6 +74,7 @@ func (r *ClassRepository) FindClassByID(id uint) (*models.Class, error) {
 	var class models.Class
 	err := row.Scan(
 		&class.ID,
+		&class.UserID,
 		&class.InviteCode,
 		&class.Title,
 		&class.Description,
@@ -142,19 +144,53 @@ func (r *ClassRepository) FindInviteCodeByID(id uint) (string, error) {
 }
 
 // InsertClassEnrollment - บันทึกการ join ลงใน pivot table user_classes
-func (r *ClassRepository) InsertClassEnrollment(userID, classID uint) error {
-	query := `INSERT INTO user_classes (id, user_id, class_id) VALUES (UUID(), ?, ?)`
-	_, err := db.DB.Exec(query, userID, classID)
-	return err
+func (r *ClassRepository) InsertClassEnrollment(userID, classID string) error {
+    query := `INSERT INTO user_classes (id, user_id, class_id) VALUES (UUID(), ?, ?)`
+    _, err := db.DB.Exec(query, userID, classID)
+    return err
 }
 
 // HasJoinedClass - ตรวจสอบว่าผู้ใช้ได้ join คลาสนี้ไปแล้วหรือไม่
-func (r *ClassRepository) HasJoinedClass(userID, classID uint) (bool, error) {
-	query := `SELECT COUNT(*) FROM user_classes WHERE user_id = ? AND class_id = ?`
-	var count int
-	err := db.DB.QueryRow(query, userID, classID).Scan(&count)
-	if err != nil {
-		return false, err
-	}
-	return count > 0, nil
+func (r *ClassRepository) HasJoinedClass(userID, classID string) (bool, error) {
+    query := `SELECT COUNT(*) FROM user_classes WHERE user_id = ? AND class_id = ?`
+    var count int
+    err := db.DB.QueryRow(query, userID, classID).Scan(&count)
+    if err != nil {
+        return false, err
+    }
+    return count > 0, nil
+}
+
+// DeleteClassEnrollment - ลบการ join ใน pivot table user_classes
+func (r *ClassRepository) DeleteClassEnrollment(userID, classID string) error {
+    query := `DELETE FROM user_classes WHERE user_id = ? AND class_id = ?`
+    _, err := db.DB.Exec(query, userID, classID)
+    return err
+}
+
+// DeleteClassInUserCourses - ลบการ join ในตาราง user_courses (หากมี)
+func (r *ClassRepository) DeleteClassInUserCourses(userID, classID string) error {
+    query := `DELETE FROM user_courses WHERE user_id = ? AND class_id = ?`
+    _, err := db.DB.Exec(query, userID, classID)
+    return err
+}
+
+// ForceRemoveUserFromClass - บังคับให้ผู้ใช้ถูกลบออกจากคลาส
+func (r *ClassRepository) ForceRemoveUserFromClass(userID, classID string) error {
+    query := `DELETE FROM user_classes WHERE user_id = ? AND class_id = ?`
+    result, err := db.DB.Exec(query, userID, classID)
+    if err != nil {
+        return err
+    }
+    
+    rowsAffected, err := result.RowsAffected()
+    if err != nil {
+        return err
+    }
+    
+    if rowsAffected == 0 {
+        return errors.New("user not found in the class")
+    }
+
+    return nil
 }
