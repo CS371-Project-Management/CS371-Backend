@@ -19,5 +19,5 @@ docker exec -it cs371-db mysql -u root -p cs371db
 
 ## migration use
 ```bash
-migrate -path db/migrations -database "mysql://user:password@tcp(localhost:3306)/your_dbname" + (up / down)
+migrate -path db/migrations -database "mysql://root:my-secret-pw@tcp(127.0.0.1:3306)/cs371db" + (up / down)
 ```

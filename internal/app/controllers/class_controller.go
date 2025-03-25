@@ -186,3 +186,60 @@ func (cc *ClassController) GetInviteCodeHandler(c *fiber.Ctx) error {
         "invite_code": inviteCode,
     })
 }
+
+func (cc *ClassController) JoinPublicClassHandler(c *fiber.Ctx) error {
+    // ดึง userID จาก session หรือ token (ตัวอย่างนี้สมมติว่า middleware ได้เก็บไว้ใน c.Locals("user_id"))
+    userIDAny := c.Locals("user_id")
+    if userIDAny == nil {
+        return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "User not authenticated"})
+    }
+    userID, ok := userIDAny.(uint)
+    if !ok {
+        return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid user id"})
+    }
+    
+    idParam := c.Params("id")
+    classID64, err := strconv.ParseUint(idParam, 10, 32)
+    if err != nil {
+        return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid class ID"})
+    }
+    classID := uint(classID64)
+
+    err = cc.service.JoinPublicClass(userID, classID)
+    if err != nil {
+        // handle error...
+        return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+    }
+
+    return c.JSON(fiber.Map{"message": "Joined public class successfully"})
+}
+
+func (cc *ClassController) JoinPrivateClassHandler(c *fiber.Ctx) error {
+    // ดึง userID จาก session หรือ token
+    userIDAny := c.Locals("user_id")
+    if userIDAny == nil {
+        return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "User not authenticated"})
+    }
+    userID, ok := userIDAny.(uint)
+    if !ok {
+        return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid user id"})
+    }
+
+    var req struct {
+        InviteCode string `json:"invite_code"`
+    }
+    if err := c.BodyParser(&req); err != nil {
+        return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
+    }
+    if req.InviteCode == "" {
+        return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invite code is required"})
+    }
+
+    err := cc.service.JoinPrivateClass(userID, req.InviteCode)
+    if err != nil {
+        // handle errors accordingly...
+        return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+    }
+
+    return c.JSON(fiber.Map{"message": "Joined private class successfully"})
+}
