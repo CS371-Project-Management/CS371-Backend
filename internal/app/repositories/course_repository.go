@@ -14,14 +14,16 @@ type CourseRepository struct {
 
 func NewCourseRepository() *CourseRepository { return &CourseRepository{} }
 
-func (r *CourseRepository) Create(course *models.CreateCourseRequest) error {
+func (r *CourseRepository) Create(course *models.Course) error {
 	id, err := utils.GenerateUniqueID(db.DB, "courses", "id")
 	if err != nil {
 		return fmt.Errorf("Error generating unique UUID: %w", err)
 	}
 
+	course.ID = id
+
 	query := "INSERT INTO courses (id, class_id, number, title, description, difficulty_level) VALUES (?, ?, ?, ?, ?, ?)"
-	_, err = db.DB.Exec(query, id, course.ClassID, course.Number, course.Title, course.Description, course.DifficultyLevel)
+	_, err = db.DB.Exec(query, course.ID, course.ClassID, course.Number, course.Title, course.Description, course.DifficultyLevel)
 	if err != nil {
 		return fmt.Errorf("Create: error executing query: %w", err)
 	}
@@ -29,13 +31,26 @@ func (r *CourseRepository) Create(course *models.CreateCourseRequest) error {
 }
 
 func (r *CourseRepository) Update(course *models.UpdateCourseRequest) error {
-	query := "UPDATE courses SET  title = ?, description = ?, difficulty_level = ? WHERE id = ?"
-	_, err := db.DB.Exec(query, course.Title, course.Description, course.DifficultyLevel, course.ID)
+	queryCheck := "SELECT COUNT(*) FROM courses WHERE id = ?"
+	var count int
+	err := db.DB.QueryRow(queryCheck, course.ID).Scan(&count)
+	if err != nil {
+		return fmt.Errorf("error checking if course exists: %w", err)
+	}
+
+	if count == 0 {
+		return fmt.Errorf("course not found with id %s", course.ID)
+	}
+
+	queryUpdate := "UPDATE courses SET title = ?, description = ?, difficulty_level = ? WHERE id = ?"
+	_, err = db.DB.Exec(queryUpdate, course.Title, course.Description, course.DifficultyLevel, course.ID)
 	if err != nil {
 		return fmt.Errorf("Update: error executing query: %w", err)
 	}
+
 	return nil
 }
+
 func (r *CourseRepository) FindByClassId(classID string) ([]models.Course, error) {
 	query := "SELECT id, class_id, number, title, description, difficulty_level FROM courses WHERE class_id = ?"
 	rows, err := db.DB.Query(query, classID)
@@ -63,4 +78,27 @@ func (r *CourseRepository) FindByClassId(classID string) ([]models.Course, error
 	}
 
 	return courses, nil
+}
+
+func (r *CourseRepository) DeleteCourseByID(courseID string) error {
+	log.Println("Repository: Deleting course with id: ", courseID)
+
+	var count int
+	checkQuery := "SELECT COUNT(*) FROM courses WHERE id = ?"
+	err := db.DB.QueryRow(checkQuery, courseID).Scan(&count)
+	if err != nil {
+		return fmt.Errorf("Error checking if course exists: %w", err)
+	}
+
+	if count == 0 {
+		return fmt.Errorf("no course found with id %s", courseID)
+	}
+
+	query := "DELETE FROM courses WHERE id = ?"
+	_, err = db.DB.Exec(query, courseID)
+	if err != nil {
+		return fmt.Errorf("DeleteCourseByID: error executing query: %w", err)
+	}
+
+	return nil
 }
