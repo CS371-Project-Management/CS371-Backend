@@ -1,8 +1,8 @@
-package repositories
+package quiz
 
 import (
 	"cs371-backend/db"
-	"cs371-backend/internal/app/models"
+	"cs371-backend/internal/app/models/quiz"
 	"fmt"
 )
 
@@ -12,7 +12,7 @@ func NewOrderingQuizRepository() *OrderingQuizRepository {
 	return &OrderingQuizRepository{}
 }
 
-func (r *OrderingQuizRepository) CreateOrderingQuiz(ordering *models.OrderingQuiz) error {
+func (r *OrderingQuizRepository) CreateOrderingQuiz(ordering *quiz.OrderingQuiz) error {
 	query := `
 		INSERT INTO ordering_quizzes (quiz_id, question)
 		VALUES (?, ?)
@@ -26,8 +26,8 @@ func (r *OrderingQuizRepository) CreateOrderingQuiz(ordering *models.OrderingQui
 	return nil
 }
 
-func (r *OrderingQuizRepository) GetOrderingByQuizID(id string) (*models.OrderingQuiz, error) {
-	quiz := new(models.OrderingQuiz)
+func (r *OrderingQuizRepository) GetOrderingByQuizID(id string) (*quiz.OrderingQuiz, error) {
+	quiz := new(quiz.OrderingQuiz)
 
 	query := "SELECT quiz_id, question FROM ordering_quizzes WHERE quiz_id = ?"
 	err := db.DB.QueryRow(query, id).Scan(&quiz.QuizID, &quiz.Question)
@@ -36,4 +36,13 @@ func (r *OrderingQuizRepository) GetOrderingByQuizID(id string) (*models.Orderin
 	}
 
 	return quiz, nil
+}
+
+func (r *OrderingQuizRepository) DeleteOrderingQuizByID(quizID string) error {
+	query := "DELETE FROM ordering_quizzes WHERE quiz_id = ?"
+	_, err := db.DB.Exec(query, quizID)
+	if err != nil {
+		return fmt.Errorf("DeleteOrderingQuizByID: error executing query: %w", err)
+	}
+	return nil
 }

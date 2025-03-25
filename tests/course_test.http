@@ -7,7 +7,7 @@ POST http://localhost:8080/api1/courses
 Content-Type: application/json
 
 {
-  "class_id": "0195c9aa-b773-77a0-bed1-6e2c7eaf8079",
+  "class_id": "0195ca5b-dcf4-7a75-948b-5b27d9a57eef",
   "title": "Math",
   "description": "Mathematics",
   "difficulty_level": "medium",
@@ -15,10 +15,10 @@ Content-Type: application/json
 }
 
 ### Get Courses by Class ID
-GET http://localhost:8080/api1/courses/0195c9aa-b773-77a0-bed1-6e2c7eaf8079
+GET http://localhost:8080/api1/courses/class/0195ca5b-dcf4-7a75-948b-5b27d9a57eef
 
 ### Update Course
-PUT http://localhost:8080/api1/courses/0195c9aa-b773-77a0-bed1-6e2c7eaf8079
+PUT http://localhost:8080/api1/courses/cb8c2a86-de34-4f00-8541-99c4db43bcaf
 Content-Type: application/json
 
 {
@@ -27,5 +27,8 @@ Content-Type: application/json
   "difficulty_level": "medium",
   "number" : 1
 }
+
+### Delete Course
+DELETE http://localhost:8080/api1/courses/cb8c2a86-de34-4f00-8541-99c4db43bcaf
 
 ###

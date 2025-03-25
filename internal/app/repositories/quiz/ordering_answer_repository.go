@@ -1,8 +1,8 @@
-package repositories
+package quiz
 
 import (
 	"cs371-backend/db"
-	"cs371-backend/internal/app/models"
+	"cs371-backend/internal/app/models/quiz"
 	"cs371-backend/internal/app/utils"
 	"fmt"
 )
@@ -13,7 +13,7 @@ func NewOrderingAnswerRepository() *OrderingAnswerRepository {
 	return &OrderingAnswerRepository{}
 }
 
-func (r *OrderingAnswerRepository) CreateOrderingAnswer(answer *models.OrderingAnswer) error {
+func (r *OrderingAnswerRepository) CreateOrderingAnswer(answer *quiz.OrderingAnswer) error {
 	query := "INSERT INTO ordering_answers (id ,quiz_id, answer, `order`) VALUES (?,?, ?, ?)"
 
 	id, err := utils.GenerateUniqueID(db.DB, "ordering_answers", "id")
@@ -31,16 +31,16 @@ func (r *OrderingAnswerRepository) CreateOrderingAnswer(answer *models.OrderingA
 	return nil
 }
 
-func (r *OrderingAnswerRepository) GetOrderingAnswerByQuizID(id string) ([]models.OrderingAnswer, error) {
+func (r *OrderingAnswerRepository) GetOrderingAnswerByQuizID(id string) ([]quiz.OrderingAnswer, error) {
 	query := "SELECT id, quiz_id, answer, `order` FROM ordering_answers WHERE quiz_id = ?"
 	rows, err := db.DB.Query(query, id)
 	if err != nil {
 		return nil, fmt.Errorf("GetOrderingAnswerQuizID: error executing query: %w", err)
 	}
 
-	var answers []models.OrderingAnswer
+	var answers []quiz.OrderingAnswer
 	for rows.Next() {
-		var answer models.OrderingAnswer
+		var answer quiz.OrderingAnswer
 		err = rows.Scan(&answer.ID, &answer.QuizID, &answer.Answer, &answer.Order)
 		if err != nil {
 			return nil, fmt.Errorf("GetOrderingAnswerQuizID: error scanning row: %w", err)
@@ -49,4 +49,13 @@ func (r *OrderingAnswerRepository) GetOrderingAnswerByQuizID(id string) ([]model
 	}
 
 	return answers, nil
+}
+
+func (r *OrderingAnswerRepository) DeleteOrderingAnswerByID(answerID string) error {
+	query := "DELETE FROM ordering_answers WHERE id = ?"
+	_, err := db.DB.Exec(query, answerID)
+	if err != nil {
+		return fmt.Errorf("DeleteOrderingAnswerByID: error executing query: %w", err)
+	}
+	return nil
 }

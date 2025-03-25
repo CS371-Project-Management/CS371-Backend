@@ -1,4 +1,4 @@
-package models
+package quiz
 
 type ChoiceAnswer struct {
 	ID     string `json:"id" db:"id"`
