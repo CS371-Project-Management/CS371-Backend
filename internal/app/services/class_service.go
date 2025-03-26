@@ -75,7 +75,7 @@ func (s *ClassService) DeleteClass(id string) error {
 	return s.repo.DeleteClass(id)
 }
 
-func (s *ClassService) GetInviteCode(classID uint) (string, error) {
+func (s *ClassService) GetInviteCode(classID string) (string, error) {
 	inviteCode, err := s.repo.FindInviteCodeByID(classID)
 	if err != nil {
 		return "", err

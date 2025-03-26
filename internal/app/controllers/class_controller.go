@@ -174,13 +174,12 @@ func (cc *ClassController) DeleteClassHandler(c *fiber.Ctx) error {
 
 func (cc *ClassController) GetInviteCodeHandler(c *fiber.Ctx) error {
 	idParam := c.Params("id")
-	idUint64, err := strconv.ParseUint(idParam, 10, 32)
-	if err != nil {
+	if idParam == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid class ID",
 		})
 	}
-	inviteCode, err := cc.service.GetInviteCode(uint(idUint64))
+	inviteCode, err := cc.service.GetInviteCode(idParam)
 	if err != nil {
 		switch err.Error() {
 		case "class not found":

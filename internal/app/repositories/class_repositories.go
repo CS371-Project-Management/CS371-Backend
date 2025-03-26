@@ -134,7 +134,7 @@ func (r *ClassRepository) DeleteClass(id string) error {
 }
 
 // FindInviteCodeByID - ดึง invite_code จาก classes โดย id
-func (r *ClassRepository) FindInviteCodeByID(id uint) (string, error) {
+func (r *ClassRepository) FindInviteCodeByID(id string) (string, error) {
 	var inviteCode string
 	query := `SELECT invite_code FROM classes WHERE id = ?`
 	err := db.DB.QueryRow(query, id).Scan(&inviteCode)
