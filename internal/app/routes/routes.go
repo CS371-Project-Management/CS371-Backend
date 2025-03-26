@@ -26,35 +26,35 @@ func SetupRoutes(app *fiber.App) {
 	api1.Post("/reset-password", userController.ResetPassword)
 
 	classController := controllers.NewClassController()
-	api1.Post("/classes", classController.CreateClassHandler)
-	api1.Get("/classes", classController.GetAllClassesHandler)
-	api1.Get("/classes/:id", classController.GetClassHandler)
-	api1.Put("/classes/:id", classController.UpdateClassHandler)
-	api1.Delete("/classes/:id", classController.DeleteClassHandler)
+	api1.Post("/classes",middlewares.AuthMiddleware, classController.CreateClassHandler)
+	api1.Get("/classes",middlewares.AuthMiddleware, classController.GetAllClassesHandler)
+	api1.Get("/classes/:id",middlewares.AuthMiddleware, classController.GetClassHandler)
+	api1.Put("/classes/:id",middlewares.AuthMiddleware, classController.UpdateClassHandler)
+	api1.Delete("/classes/:id",middlewares.AuthMiddleware, classController.DeleteClassHandler)
 
-	api1.Get("/classes/:id/invite_code", classController.GetInviteCodeHandler)
+	api1.Get("/classes/:id/invite_code",middlewares.AuthMiddleware, classController.GetInviteCodeHandler)
 
 	api1.Post("/classes/:id/join-public", middlewares.AuthMiddleware,classController.JoinPublicClassHandler)
 	api1.Post("/classes/join-private", middlewares.AuthMiddleware,classController.JoinPrivateClassHandler)
 
-	api1.Post("/classes/leaveClass/:id", middlewares.AuthMiddleware, classController.LeaveClassHandler)
+	api1.Post("/classes/leaveClass/:id", middlewares.AuthMiddleware, classController.LeaveClassHandler) //****
 
-	api1.Delete("/classes/:class_id/users/:user_id", classController.RemoveUserFromClassHandler)
+	api1.Delete("/classes/:class_id/users/:user_id",middlewares.AuthMiddleware, classController.RemoveUserFromClassHandler)
 
 	courseController := controllers.NewCourseController()
-	api1.Get("/courses/class/:classID", courseController.GetCoursesByClassID)
-	api1.Post("/courses", courseController.CreateCourse)
-	api1.Put("/courses/:course_id", courseController.UpdateCourse)
-	api1.Delete("/courses/:course_id", courseController.DeleteCourseByID)
+	api1.Get("/courses/class/:classID",middlewares.AuthMiddleware, courseController.GetCoursesByClassID)
+	api1.Post("/courses",middlewares.AuthMiddleware, courseController.CreateCourse)
+	api1.Put("/courses/:course_id",middlewares.AuthMiddleware, courseController.UpdateCourse)
+	api1.Delete("/courses/:course_id",middlewares.AuthMiddleware, courseController.DeleteCourseByID)
 
 	quizController := controllers.NewQuizController()
-	api1.Post("/quizzes", quizController.CreateChoiceQuiz)
-	api1.Get("/quizzes/:course_id", quizController.GetAllQuizByCourseID)
-	api1.Delete("/quizzes/:quiz_id", quizController.DeleteQuizByID)
-	api1.Get("/users/:user_id/courses/:course_id/progress", quizController.GetCourseProgress)
+	api1.Post("/quizzes",middlewares.AuthMiddleware, quizController.CreateChoiceQuiz)
+	api1.Get("/quizzes/:course_id",middlewares.AuthMiddleware, quizController.GetAllQuizByCourseID)
+	api1.Delete("/quizzes/:quiz_id",middlewares.AuthMiddleware, quizController.DeleteQuizByID)
+	api1.Get("/users/:user_id/courses/:course_id/progress",middlewares.AuthMiddleware, quizController.GetCourseProgress)
 
 	quizHistoryController := controllers.NewQuizHistoryController()
-	api1.Post("/quizzes/submissions", quizHistoryController.TakeQuiz)
-	api1.Get("/quiz-histories/:history_id", quizHistoryController.GetQuizHistoryByID)
-	api1.Get("/quizzes/:quiz_id/histories", quizHistoryController.GetAllQuizHistoryByQuizID)
+	api1.Post("/quizzes/submissions",middlewares.AuthMiddleware, quizHistoryController.TakeQuiz)
+	api1.Get("/quiz-histories/:history_id",middlewares.AuthMiddleware, quizHistoryController.GetQuizHistoryByID)
+	api1.Get("/quizzes/:quiz_id/histories",middlewares.AuthMiddleware, quizHistoryController.GetAllQuizHistoryByQuizID)
 }

@@ -3,7 +3,6 @@ package controllers
 import (
 	"strconv"
 
-	"github.com/gofiber/fiber/v2"
 	"cs371-backend/internal/app/models"
 	"cs371-backend/internal/app/services"
 )
@@ -19,48 +18,49 @@ func NewClassController() *ClassController {
 }
 
 func (cc *ClassController) CreateClassHandler(c *fiber.Ctx) error {
-    // รับ JSON Body
-    var req struct {
-        UserID        string `json:"user_id"`
-        Title         string `json:"title"`
-        Description   string `json:"description"`
-        Accessibility string `json:"accessibility"`
-    }
-    if err := c.BodyParser(&req); err != nil {
-        return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-            "error": "Invalid request body",
-        })
-    }
+	// รับ JSON Body
+	var req struct {
+		UserID        string `json:"user_id"`
+		Title         string `json:"title"`
+		Description   string `json:"description"`
+		Accessibility string `json:"accessibility"`
+	}
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid request body",
+		})
+	}
 
-    // แปลง string เป็น bool สำหรับ accessibility
-    accessibility, err := strconv.ParseBool(req.Accessibility)
-    if err != nil {
-        return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-            "error": "Invalid value for accessibility",
-        })
-    }
+	// แปลง string เป็น bool สำหรับ accessibility
+	accessibility, err := strconv.ParseBool(req.Accessibility)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid value for accessibility",
+		})
+	}
 
-    // สร้าง model Class
-    class := &models.Class{
-        UserID:        req.UserID,
-        Title:         req.Title,
-        Description:   req.Description,
-        Accessibility: accessibility,
-    }
+	// สร้าง model Class
+	class := &models.Class{
+		UserID:        req.UserID,
+		Title:         req.Title,
+		Description:   req.Description,
+		Accessibility: accessibility,
+	}
 
-    // เรียก Service เพื่อสร้างคลาส
-    if err := cc.service.CreateClass(class); err != nil {
-        return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-            "error": err.Error(),
-        })
-    }
+	// เรียก Service เพื่อสร้างคลาส
+	if err := cc.service.CreateClass(class); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
 
-    // ตอบกลับข้อมูลที่สำคัญ
-    return c.JSON(fiber.Map{
-        "message":     "Class created successfully",
-        "class_id":    class.ID,
-        "invite_code": class.InviteCode,
-    })
+	// ตอบกลับข้อมูลที่สำคัญ
+	return c.JSON(fiber.Map{
+		"message":     "Class created successfully",
+		"class_id":    class.ID,
+		"invite_code": class.InviteCode,
+		"UserID":      req.UserID,
+	})
 }
 
 // GetAllClassesHandler ดึงรายการคลาสทั้งหมด
@@ -150,15 +150,16 @@ func (cc *ClassController) UpdateClassHandler(c *fiber.Ctx) error {
 }
 
 func (cc *ClassController) DeleteClassHandler(c *fiber.Ctx) error {
+	// Retrieve the class ID from the URL parameter
 	idParam := c.Params("id")
-	idUint64, err := strconv.ParseUint(idParam, 10, 32)
-	if err != nil {
+	if idParam == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid class ID",
 		})
 	}
 
-	err = cc.service.DeleteClass(uint(idUint64))
+	// Call the service layer to delete the class using the UUID string
+	err := cc.service.DeleteClass(idParam)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": err.Error(),
@@ -250,42 +251,42 @@ func (cc *ClassController) JoinPrivateClassHandler(c *fiber.Ctx) error {
 
 // LeaveClassHandler - Handler สำหรับออกจากคลาส
 func (cc *ClassController) LeaveClassHandler(c *fiber.Ctx) error {
-    // ดึง userID จาก middleware (เช่น c.Locals("user_id"))
-    userIDAny := c.Locals("user_id")
-    if userIDAny == nil {
-        return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "User not authenticated"})
-    }
-    userID, ok := userIDAny.(string)
-    if !ok {
-        return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid user id"})
-    }
+	// ดึง userID จาก middleware เอา user ปัจจุบัน
+	userIDAny := c.Locals("user_id")
+	if userIDAny == nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "User not authenticated"})
+	}
+	userID, ok := userIDAny.(string)
+	if !ok {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid user id"})
+	}
 
-    // ดึง classID จาก URL parameter เช่น /api/classes/leaveClass/:id
-    classID := c.Params("id")
-    if classID == "" {
-        return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid class ID"})
-    }
+	// ดึง classID จาก URL parameter เช่น /api/classes/leaveClass/:id
+	classID := c.Params("id")
+	if classID == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid class ID"})
+	}
 
-    // เรียกใช้งาน Service เพื่อทำกระบวนการ leave class
-    if err := cc.service.LeaveClass(userID, classID); err != nil {
-        return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
-    }
+	// เรียกใช้งาน Service เพื่อทำกระบวนการ leave class
+	if err := cc.service.LeaveClass(userID, classID); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
 
-    // สำเร็จ
-    return c.JSON(fiber.Map{"message": "Left class successfully"})
+	// สำเร็จ
+	return c.JSON(fiber.Map{"message": "Left class successfully"})
 }
 
 // RemoveUserFromClassHandler - API สำหรับลบผู้ใช้จากคลาส
 func (cc *ClassController) RemoveUserFromClassHandler(c *fiber.Ctx) error {
-	classID := c.Params("class_id") // รับ class ID จาก URL
-	userID := c.Params("user_id")   // รับ user ID จาก URL
+	classID := c.Params("class_id") // รับ class ID
+	userID := c.Params("user_id")   // รับ user ID ที่จะเอาออกจาก class
 
 	if classID == "" || userID == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid user ID or class ID"})
 	}
 
 	// เรียกใช้ Service เพื่อลบผู้ใช้
-	if err := cc.service.RemoveUserFromClass(userID, classID); err != nil {
+	if err := cc.service.LeaveClass(userID, classID); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 

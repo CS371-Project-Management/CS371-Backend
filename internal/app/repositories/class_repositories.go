@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 
 	"github.com/google/uuid"
 )
@@ -127,7 +128,7 @@ func (r *ClassRepository) UpdateClass(class *models.Class) error {
 }
 
 // DeleteClass - DELETE จากตาราง classes
-func (r *ClassRepository) DeleteClass(id uint) error {
+func (r *ClassRepository) DeleteClass(id string) error {
 	query := `DELETE FROM classes WHERE id = ?`
 	_, err := db.DB.Exec(query, id)
 	return err
@@ -169,17 +170,46 @@ func (r *ClassRepository) DeleteClassEnrollment(userID, classID string) error {
 	return err
 }
 
-// DeleteClassInUserCourses - ลบการ join ในตาราง user_courses (หากมี)
+// DeleteClassInUserCourses - ลบการ join ในตาราง user_courses
 func (r *ClassRepository) DeleteClassInUserCourses(userID, classID string) error {
 	query := `DELETE FROM user_courses WHERE user_id = ? AND class_id = ?`
 	_, err := db.DB.Exec(query, userID, classID)
 	return err
 }
 
-// ForceRemoveUserFromClass - บังคับให้ผู้ใช้ถูกลบออกจากคลาส
-func (r *ClassRepository) ForceRemoveUserFromClass(userID, classID string) error {
-	query := `DELETE FROM user_classes WHERE user_id = ? AND class_id = ?`
-	result, err := db.DB.Exec(query, userID, classID)
+// // ForceRemoveUserFromClass - บังคับให้ผู้ใช้ถูกลบออกจากคลาส
+// func (r *ClassRepository) ForceRemoveUserFromClass(userID, classID string) error {
+//     query := `DELETE FROM user_classes WHERE user_id = ? AND class_id = ?`
+//     result, err := db.DB.Exec(query, userID, classID)
+//     if err != nil {
+//         return err
+//     }
+
+//     rowsAffected, err := result.RowsAffected()
+//     if err != nil {
+//         return err
+//     }
+
+//     if rowsAffected == 0 {
+//         return errors.New("user not found in the class")
+//     }
+
+//     return nil
+// }
+
+func (r *ClassRepository) DeleteMemberFromClass(userID, classID string) error {
+	log.Println(userID)
+	log.Println(classID)
+	query := `
+		DELETE qh, uc, ucl
+		FROM user_classes ucl
+		JOIN user_courses uc ON uc.user_id = ucl.user_id
+			LEFT JOIN courses c ON c.class_id = ucl.class_id
+			LEFT JOIN quizzes q ON q.course_id = c.id
+			LEFT JOIN quiz_histories qh ON qh.user_id = uc.user_id AND qh.quiz_id = q.id
+		WHERE ucl.class_id = ? AND ucl.user_id = ?;`
+
+	result, err := db.DB.Exec(query, classID, userID)
 	if err != nil {
 		return err
 	}
