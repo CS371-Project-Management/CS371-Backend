@@ -98,6 +98,7 @@ func (r *QuizHistoryRepository) DeleteQuizHistoryByQuizID(quizID string, userID 
 	return nil
 }
 
+
 func (r *QuizHistoryRepository) CountAnsweredQuizzes(courseID, userID string) (int, error) {
 	var count int
 	query := `

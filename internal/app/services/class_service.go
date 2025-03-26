@@ -7,19 +7,27 @@ import (
 
 	"cs371-backend/internal/app/models"
 	"cs371-backend/internal/app/repositories"
+	"cs371-backend/internal/app/repositories/quiz"
+	"cs371-backend/internal/app/repositories/quiz_history"
 
 	"github.com/google/uuid"
 )
 
 type ClassService struct {
 	repo *repositories.ClassRepository
-	logRepo   *repositories.LogRepository
+	quizHistoryRepository *quiz_history.QuizHistoryRepository
+	courseRepository *repositories.CourseRepository
+	quizRepository *quiz.QuizRepository
+	userCourseRepository *repositories.UserCourseRepository
 }
 
 func NewClassService() *ClassService {
 	return &ClassService{
 		repo: repositories.NewClassRepository(),
-		logRepo:   repositories.NewLogRepository(),
+		quizHistoryRepository: quiz_history.NewQuizHistoryRepository(),
+		courseRepository: repositories.NewCourseRepository(),
+		quizRepository: quiz.NewQuizRepository(),
+		userCourseRepository: repositories.NewUserCourseRepository(),
 	}
 }
 
@@ -63,7 +71,7 @@ func (s *ClassService) UpdateClass(class *models.Class) error {
 	return s.repo.UpdateClass(class)
 }
 
-func (s *ClassService) DeleteClass(id uint) error {
+func (s *ClassService) DeleteClass(id string) error {
 	return s.repo.DeleteClass(id)
 }
 
@@ -94,28 +102,54 @@ func (s *ClassService) JoinPublicClass(userID, classID string) error {
     if joined {
         return errors.New("already joined this class")
     }
-    return s.repo.InsertClassEnrollment(userID, classID)
+	
+	s.repo.InsertClassEnrollment(userID, classID)
+
+    var courseS []models.Course
+
+	courseS,_ = s.courseRepository.FindByClassId(classID)
+	for _,course := range courseS{
+		user_course := new(models.UserCourse)
+		user_course.CourseID = course.ID
+		user_course.UserID = userID
+		s.userCourseRepository.Create(user_course)
+	}
+
+	return nil
 }
 
 func (s *ClassService) JoinPrivateClass(userID string, inviteCode string) error {
 	// ค้นหาคลาสที่มี invite code ตรงกับที่ผู้ใช้ส่งมา
 	class, err := s.repo.FindClassByInviteCode(inviteCode)
-	if err != nil {
-		return err
-	}
-	if class == nil {
-		return errors.New("invalid invite code")
+	classID := class.ID
+    if err != nil {
+        return err
+    }
+    if class == nil {
+        return errors.New("class not found")
+    }
+
+    joined, err := s.repo.HasJoinedClass(userID, classID)
+    if err != nil {
+        return err
+    }
+    if joined {
+        return errors.New("already joined this class")
+    }
+	
+	s.repo.InsertClassEnrollment(userID, classID)
+
+    var courseS []models.Course
+
+	courseS,_ = s.courseRepository.FindByClassId(classID)
+	for _,course := range courseS{
+		user_course := new(models.UserCourse)
+		user_course.CourseID = course.ID
+		user_course.UserID = userID
+		s.userCourseRepository.Create(user_course)
 	}
 
-	joined, err := s.repo.HasJoinedClass(userID, class.ID)
-	if err != nil {
-		return err
-	}
-	if joined {
-		return errors.New("already joined this class")
-	}
-
-	return s.repo.InsertClassEnrollment(userID, class.ID)
+	return nil
 }
 
 // generateInviteCode สร้าง invite code แบบสุ่มความยาว length
@@ -135,51 +169,15 @@ func GenerateInviteCode(length int) string {
 }
 
 // LeaveClass - กระบวนการออกจากคลาส
-func (s *ClassService) LeaveClass(userID, classID string) error {
-    // 1. ตรวจสอบว่าคลาสมีอยู่จริงหรือไม่
-    class, err := s.repo.FindClassByID(classID)
-    if err != nil {
-        return err
-    }
-    if class == nil {
-        return errors.New("class not found")
-    }
-
-    // 2. ตรวจสอบว่าผู้ใช้ได้ Join คลาสนี้อยู่หรือไม่
-    joined, err := s.repo.HasJoinedClass(userID, classID)
-    if err != nil {
-        return err
-    }
-    if !joined {
-        return errors.New("user has not joined this class")
-    }
-
-    // 3. ลบความสัมพันธ์ user <-> class ใน user_classes
-    if err := s.repo.DeleteClassEnrollment(userID, classID); err != nil {
-        return err
-    }
-
-    // // 4. ลบความสัมพันธ์ user <-> class ใน user_courses
-    // if err := s.repo.DeleteClassInUserCourses(userID, classID); err != nil {
-    //     return err
-    // }
-
-    // 4. ลบข้อมูล logs ต่าง ๆ ของผู้ใช้ (เช่น quiz_histories, choice_histories ฯลฯ)
-    if err := s.logRepo.DeleteUserLogs(userID); err != nil {
-        return err
-    }
+func (s *ClassService) LeaveClass(userID , classID string) error {
+	err := s.repo.DeleteMemberFromClass(userID,classID )
+	if err != nil {
+		return err
+	}
     return nil
 }
 
 // RemoveUserFromClass - บังคับให้ลบผู้ใช้จากคลาส
 func (s *ClassService) RemoveUserFromClass(userID, classID string) error {
-	// ตรวจสอบว่าผู้ใช้มีอยู่จริงในคลาสก่อนลบ
-	err := s.repo.ForceRemoveUserFromClass(userID, classID)
-	if err != nil {
-		if err.Error() == "user not found in the class" {
-			return errors.New("user is not enrolled in this class")
-		}
-		return err
-	}
-	return nil
+    return s.LeaveClass(userID, classID)
 }

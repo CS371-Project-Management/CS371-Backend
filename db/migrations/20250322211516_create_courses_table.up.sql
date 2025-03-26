@@ -6,5 +6,5 @@ CREATE TABLE IF NOT EXISTS courses
     description      TEXT                            NOT NULL,
     difficulty_level ENUM ('easy', 'medium', 'hard') NOT NULL,
     number           INT                             NOT NULL,
-    FOREIGN KEY (class_id) REFERENCES classes (id)
+    FOREIGN KEY (class_id) REFERENCES classes (id) ON DELETE CASCADE
 );

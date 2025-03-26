@@ -60,6 +60,7 @@ func (cc *ClassController) CreateClassHandler(c *fiber.Ctx) error {
         "message":     "Class created successfully",
         "class_id":    class.ID,
         "invite_code": class.InviteCode,
+		"UserID": req.UserID,
     })
 }
 
@@ -150,24 +151,25 @@ func (cc *ClassController) UpdateClassHandler(c *fiber.Ctx) error {
 }
 
 func (cc *ClassController) DeleteClassHandler(c *fiber.Ctx) error {
-	idParam := c.Params("id")
-	idUint64, err := strconv.ParseUint(idParam, 10, 32)
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid class ID",
-		})
-	}
+    // Retrieve the class ID from the URL parameter
+    idParam := c.Params("id")
+    if idParam == "" {
+        return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+            "error": "Invalid class ID",
+        })
+    }
 
-	err = cc.service.DeleteClass(uint(idUint64))
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
-		})
-	}
+    // Call the service layer to delete the class using the UUID string
+    err := cc.service.DeleteClass(idParam)
+    if err != nil {
+        return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+            "error": err.Error(),
+        })
+    }
 
-	return c.JSON(fiber.Map{
-		"message": "Class deleted successfully",
-	})
+    return c.JSON(fiber.Map{
+        "message": "Class deleted successfully",
+    })
 }
 
 func (cc *ClassController) GetInviteCodeHandler(c *fiber.Ctx) error {
@@ -250,7 +252,7 @@ func (cc *ClassController) JoinPrivateClassHandler(c *fiber.Ctx) error {
 
 // LeaveClassHandler - Handler สำหรับออกจากคลาส
 func (cc *ClassController) LeaveClassHandler(c *fiber.Ctx) error {
-    // ดึง userID จาก middleware (เช่น c.Locals("user_id"))
+    // ดึง userID จาก middleware เอา user ปัจจุบัน
     userIDAny := c.Locals("user_id")
     if userIDAny == nil {
         return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "User not authenticated"})
@@ -277,17 +279,17 @@ func (cc *ClassController) LeaveClassHandler(c *fiber.Ctx) error {
 
 // RemoveUserFromClassHandler - API สำหรับลบผู้ใช้จากคลาส
 func (cc *ClassController) RemoveUserFromClassHandler(c *fiber.Ctx) error {
-	classID := c.Params("class_id") // รับ class ID จาก URL
-	userID := c.Params("user_id")   // รับ user ID จาก URL
+	classID := c.Params("class_id") // รับ class ID
+	userID := c.Params("user_id")   // รับ user ID ที่จะเอาออกจาก class
 
 	if classID == "" || userID == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid user ID or class ID"})
 	}
 
 	// เรียกใช้ Service เพื่อลบผู้ใช้
-	if err := cc.service.RemoveUserFromClass(userID, classID); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
-	}
+	if err := cc.service.LeaveClass(userID, classID); err != nil {
+        return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+    }
 
 	return c.JSON(fiber.Map{"message": "User removed from class successfully"})
 }
