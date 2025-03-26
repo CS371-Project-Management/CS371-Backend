@@ -7,7 +7,7 @@ POST http://localhost:8080/api1/courses
 Content-Type: application/json
 
 {
-  "class_id": "0195ca5b-dcf4-7a75-948b-5b27d9a57eef",
+  "class_id": "f8faf4f0-09cb-11f0-9cd2-0242ac120002",
   "title": "Math",
   "description": "Mathematics",
   "difficulty_level": "medium",

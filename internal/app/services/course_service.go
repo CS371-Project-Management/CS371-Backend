@@ -19,17 +19,20 @@ type CreateCourseRequest struct {
 
 type CourseService struct {
 	courseRepository     *repositories.CourseRepository
+	classRepository      *repositories.ClassRepository
 	userCourseRepository *repositories.UserCourseRepository
 }
 
 func NewCourseService() *CourseService {
 	return &CourseService{
 		courseRepository:     repositories.NewCourseRepository(),
+		classRepository:      repositories.NewClassRepository(),
 		userCourseRepository: repositories.NewUserCourseRepository(),
 	}
 }
 
 func (s *CourseService) CreateCourse(request *CreateCourseRequest) (*models.Course, error) {
+	// สร้าง Course ใหม่
 	course := new(models.Course)
 	course.ClassID = request.ClassID
 	course.Title = request.Title
@@ -37,12 +40,44 @@ func (s *CourseService) CreateCourse(request *CreateCourseRequest) (*models.Cour
 	course.DifficultyLevel = request.DifficultyLevel
 	course.Number = request.Number
 
+	// สร้าง Course ใหม่ในฐานข้อมูล
 	err := s.courseRepository.Create(course)
 	if err != nil {
 		return nil, fmt.Errorf("Error creating course: %w", err)
 	}
 
+	// สร้าง UserCourse สำหรับทุกผู้ใช้ใน Class
+	err = s.createUserCoursesForClass(course.ClassID, course.ID)
+	if err != nil {
+		return nil, fmt.Errorf("Error creating user courses: %w", err)
+	}
+
 	return course, nil
+}
+
+func (s *CourseService) createUserCoursesForClass(classID, courseID string) error {
+	// ดึงผู้ใช้ทั้งหมดที่อยู่ใน class โดยใช้ UserClassRepository
+	userIDs, err := s.classRepository.GetUsersByClassID(classID)
+	if err != nil {
+		return fmt.Errorf("Error fetching users from user_classes: %w", err)
+	}
+
+	// สำหรับแต่ละ user ที่อยู่ใน class ให้สร้าง user_course
+	for _, userID := range userIDs {
+		// สร้าง UserCourse ใหม่
+		userCourse := &models.UserCourse{
+			UserID:   userID,
+			CourseID: courseID,
+		}
+
+		// เพิ่ม user_course ลงในฐานข้อมูล
+		err := s.userCourseRepository.Create(userCourse)
+		if err != nil {
+			return fmt.Errorf("Error creating user_course for user %s: %w", userID, err)
+		}
+	}
+
+	return nil
 }
 
 func (s *CourseService) UpdateCourse(course *models.UpdateCourseRequest) error {
