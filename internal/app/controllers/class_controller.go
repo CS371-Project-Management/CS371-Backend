@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"github.com/gofiber/fiber/v2"
 	"strconv"
 
 	"cs371-backend/internal/app/models"
