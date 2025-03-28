@@ -1,8 +1,9 @@
 package controllers
 
 import (
-	"github.com/gofiber/fiber/v2"
 	"strconv"
+
+	"github.com/gofiber/fiber/v2"
 
 	"cs371-backend/internal/app/models"
 	"cs371-backend/internal/app/services"
@@ -232,26 +233,26 @@ func (cc *ClassController) GetInviteCodeHandler(c *fiber.Ctx) error {
 
 // JoinPublicClassHandler สำหรับผู้ใช้เข้าร่วมคลาสสาธารณะ
 func (cc *ClassController) JoinPublicClassHandler(c *fiber.Ctx) error {
-	// ดึง userID จาก session หรือ token (สมมติว่า middleware เก็บเป็น string)
-	userIDAny := c.Locals("user_id")
-	if userIDAny == nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "User not authenticated"})
-	}
-	userID, ok := userIDAny.(string)
-	if !ok {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid user id"})
-	}
+    // ดึง userID จาก session หรือ token
+    userIDAny := c.Locals("user_id")
+    if userIDAny == nil {
+        return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "User not authenticated"})
+    }
+    userID, ok := userIDAny.(string)
+    if !ok {
+        return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid user id"})
+    }
 
-	classID := c.Params("id")
-	if classID == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid class ID"})
-	}
+    classID := c.Params("id")
+    if classID == "" {
+        return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid class ID"})
+    }
 
-	if err := cc.service.JoinPublicClass(userID, classID); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
-	}
+    if err := cc.service.JoinPublicClass(userID, classID); err != nil {
+        return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+    }
 
-	return c.JSON(fiber.Map{"message": "Joined public class successfully"})
+    return c.JSON(fiber.Map{"message": "Joined public class successfully"})
 }
 
 // JoinPrivateClassHandler สำหรับผู้ใช้เข้าร่วมคลาสแบบส่วนตัวผ่าน invite code
