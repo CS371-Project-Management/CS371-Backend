@@ -305,3 +305,32 @@ func (r *ClassRepository) GetUsersByClassID(classID string) ([]models.User, erro
 
 	return users, nil
 }
+
+// GetClassUserJoinByUserID ดึงรายการคลาสที่ผู้ใช้เข้าร่วม (JOIN กับตาราง classes)
+func (r *ClassRepository) GetClassUserJoinByUserID(userID string) ([]models.Class, error) {
+	query := `
+		SELECT c.id, c.user_id, c.invite_code, c.title, c.description, c.accessibility
+		FROM user_classes uc
+		JOIN classes c ON c.id = uc.class_id
+		WHERE uc.user_id = ?
+	`
+	rows, err := db.DB.Query(query, userID)
+	if err != nil {
+		return nil, fmt.Errorf("error fetching joined classes for user %s: %w", userID, err)
+	}
+	defer rows.Close()
+
+	var classes []models.Class
+	for rows.Next() {
+		var class models.Class
+		if err := rows.Scan(&class.ID, &class.UserID, &class.InviteCode, &class.Title, &class.Description, &class.Accessibility); err != nil {
+			return nil, fmt.Errorf("error scanning row: %w", err)
+		}
+		classes = append(classes, class)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating over rows: %w", err)
+	}
+	return classes, nil
+}
+

@@ -43,6 +43,9 @@ func SetupRoutes(app *fiber.App) {
 
 	api1.Get("/classes/:id/users", classController.GetUsersByClassIDHandler)
 	api1.Get("/classes/owned/:user_id", classController.GetOwnedClassesHandler)
+
+	api1.Get("/classes/joined/:user_id", classController.GetClassUserJoinByUserIDHandler)
+
 	
 
 	courseController := controllers.NewCourseController()

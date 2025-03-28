@@ -325,3 +325,20 @@ func (cc *ClassController) RemoveUserFromClassHandler(c *fiber.Ctx) error {
 
 	return c.JSON(fiber.Map{"message": "User removed from class successfully"})
 }
+
+// GetClassUserJoinByUserIDHandler - GET /classes/joined/:user_id
+// ดึงคลาสที่ผู้ใช้เข้าร่วม (โดยใช้ user_id จาก URL parameter)
+func (cc *ClassController) GetClassUserJoinByUserIDHandler(c *fiber.Ctx) error {
+	userID := c.Params("user_id")
+	if userID == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "User ID is required"})
+	}
+
+	classes, err := cc.service.GetClassUserJoinByUserID(userID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.JSON(classes)
+}
+

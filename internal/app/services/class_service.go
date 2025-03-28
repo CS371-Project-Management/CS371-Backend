@@ -198,3 +198,7 @@ func (s *ClassService) LeaveClass(userID , classID string) error {
 func (s *ClassService) RemoveUserFromClass(userID, classID string) error {
     return s.LeaveClass(userID, classID)
 }
+
+func (s *ClassService) GetClassUserJoinByUserID(userID string) ([]models.Class, error) {
+	return s.repo.GetClassUserJoinByUserID(userID)
+}
