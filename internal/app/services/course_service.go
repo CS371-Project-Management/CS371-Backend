@@ -66,7 +66,7 @@ func (s *CourseService) createUserCoursesForClass(classID, courseID string) erro
 	for _, userID := range userIDs {
 		// สร้าง UserCourse ใหม่
 		userCourse := &models.UserCourse{
-			UserID:   userID,
+			UserID:   userID.ID,
 			CourseID: courseID,
 		}
 

@@ -42,6 +42,14 @@ func (s *ClassService) CreateClass(class *models.Class) error {
         return errors.New("class title cannot be empty")
     }
 
+	existing, err := s.repo.FindClassByTitle(class.Title)
+	if err != nil {
+		return err
+	}
+	if existing != nil {
+		return errors.New("title already exists")
+	}
+
     // ถ้าไม่มี ID ให้ generate
     if class.ID == "" {
         class.ID = uuid.New().String()
@@ -60,6 +68,15 @@ func (s *ClassService) GetAllClasses() ([]models.Class, error) {
 
 func (s *ClassService) GetClassByID(id string) (*models.Class, error) {
 	return s.repo.FindClassByID(id)
+}
+
+func (s *ClassService) GetUsersByClassID(classID string) ([]models.User, error) {
+	return s.repo.GetUsersByClassID(classID)
+}
+
+// ดึงคลาสที่เจ้าของเป็น user ที่ระบุ
+func (s *ClassService) GetClassesOwnedByUser(userID string) ([]models.Class, error) {
+	return s.repo.GetClassesByUserID(userID)
 }
 
 func (s *ClassService) UpdateClass(class *models.Class) error {

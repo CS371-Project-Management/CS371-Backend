@@ -41,6 +41,10 @@ func SetupRoutes(app *fiber.App) {
 
 	api1.Delete("/classes/:class_id/users/:user_id",middlewares.AuthMiddleware, classController.RemoveUserFromClassHandler)
 
+	api1.Get("/classes/:id/users", classController.GetUsersByClassIDHandler)
+	api1.Get("/classes/owned/:user_id", classController.GetOwnedClassesHandler)
+	
+
 	courseController := controllers.NewCourseController()
 	api1.Get("/courses/class/:classID",middlewares.AuthMiddleware, courseController.GetCoursesByClassID)
 	api1.Post("/courses",middlewares.AuthMiddleware, courseController.CreateCourse)

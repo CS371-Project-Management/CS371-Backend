@@ -65,6 +65,31 @@ func (r *ClassRepository) GetAllClasses() ([]models.Class, error) {
 	return classes, nil
 }
 
+func (r *ClassRepository) FindClassByTitle(title string) (*models.Class, error) {
+	query := `
+		SELECT id, user_id, invite_code, title, description, accessibility
+		FROM classes
+		WHERE title = ?
+	`
+	row := db.DB.QueryRow(query, title)
+	var class models.Class
+	err := row.Scan(
+		&class.ID,
+		&class.UserID,
+		&class.InviteCode,
+		&class.Title,
+		&class.Description,
+		&class.Accessibility,
+	)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &class, nil
+}
+
 // FindClassByID - SELECT class จาก id
 func (r *ClassRepository) FindClassByID(id string) (*models.Class, error) {
 	query := `
@@ -226,27 +251,57 @@ func (r *ClassRepository) DeleteMemberFromClass(userID, classID string) error {
 	return nil
 }
 
-func (r *ClassRepository) GetUsersByClassID(classID string) ([]string, error) {
-	var userIDs []string
+// GetClassesByUserID ดึงรายการคลาสทั้งหมดที่เจ้าของเป็น user ที่ระบุ
+func (r *ClassRepository) GetClassesByUserID(userID string) ([]models.Class, error) {
+	query := `
+		SELECT id, user_id, invite_code, title, description, accessibility
+		FROM classes
+		WHERE user_id = ?
+	`
+	rows, err := db.DB.Query(query, userID)
+	if err != nil {
+		return nil, fmt.Errorf("error fetching classes for user %s: %w", userID, err)
+	}
+	defer rows.Close()
 
-	query := "SELECT user_id FROM user_classes WHERE class_id = ?"
+	var classes []models.Class
+	for rows.Next() {
+		var c models.Class
+		if err := rows.Scan(&c.ID, &c.UserID, &c.InviteCode, &c.Title, &c.Description, &c.Accessibility); err != nil {
+			return nil, fmt.Errorf("error scanning row: %w", err)
+		}
+		classes = append(classes, c)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating over rows: %w", err)
+	}
+	return classes, nil
+}
+
+func (r *ClassRepository) GetUsersByClassID(classID string) ([]models.User, error) {
+	query := `
+		SELECT u.id, u.username, u.email, u.first_name, u.last_name, u.role
+		FROM user_classes uc
+		JOIN users u ON u.id = uc.user_id
+		WHERE uc.class_id = ?
+	`
 	rows, err := db.DB.Query(query, classID)
 	if err != nil {
 		return nil, fmt.Errorf("Error fetching users for class: %w", err)
 	}
 	defer rows.Close()
 
+	var users []models.User
 	for rows.Next() {
-		var userID string
-		if err := rows.Scan(&userID); err != nil {
-			return nil, fmt.Errorf("Error scanning user_id: %w", err)
+		var u models.User
+		if err := rows.Scan(&u.ID, &u.Username, &u.Email, &u.FirstName, &u.LastName, &u.Role); err != nil {
+			return nil, fmt.Errorf("Error scanning user: %w", err)
 		}
-		userIDs = append(userIDs, userID)
+		users = append(users, u)
 	}
-
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("Error iterating over rows: %w", err)
 	}
 
-	return userIDs, nil
+	return users, nil
 }

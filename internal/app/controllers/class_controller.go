@@ -150,6 +150,39 @@ func (cc *ClassController) UpdateClassHandler(c *fiber.Ctx) error {
 	})
 }
 
+func (cc *ClassController) GetUsersByClassIDHandler(c *fiber.Ctx) error {
+	classID := c.Params("id")
+	if classID == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Class ID is required"})
+	}
+
+	users, err := cc.service.GetUsersByClassID(classID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.JSON(fiber.Map{"users": users})
+}
+
+// ดึงคลาสที่เจ้าของเป็น user ที่ระบุใน URL parameter
+func (cc *ClassController) GetOwnedClassesHandler(c *fiber.Ctx) error {
+	userID := c.Params("user_id")
+	if userID == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "User ID is required",
+		})
+	}
+
+	classes, err := cc.service.GetClassesOwnedByUser(userID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return c.JSON(classes)
+}
+
 func (cc *ClassController) DeleteClassHandler(c *fiber.Ctx) error {
 	// Retrieve the class ID from the URL parameter
 	idParam := c.Params("id")
