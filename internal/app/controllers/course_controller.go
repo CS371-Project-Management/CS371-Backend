@@ -8,19 +8,19 @@ import (
 )
 
 type CourseController struct {
-	service *services.CourseService
+	Service services.CourseService
 }
 
-func NewCourseController() *CourseController {
+func NewCourseController(service services.CourseService) *CourseController {
 	return &CourseController{
-		service: services.NewCourseService(),
+		Service: service,
 	}
 }
 
 func (c *CourseController) GetCoursesByClassID(ctx *fiber.Ctx) error {
 	classID := ctx.Params("classID")
 
-	courses, err := c.service.GetCoursesByClassID(classID)
+	courses, err := c.Service.GetCoursesByClassID(classID)
 	if err != nil {
 		if strings.Contains(err.Error(), "error executing query") {
 			return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -47,7 +47,7 @@ func (c *CourseController) CreateCourse(ctx *fiber.Ctx) error {
 			"error": "Invalid request body",
 		})
 	}
-	course, err := c.service.CreateCourse(request)
+	course, err := c.Service.CreateCourse(request)
 	if err != nil {
 		if strings.Contains(err.Error(), "error executing query") {
 			return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -75,8 +75,8 @@ func (c *CourseController) UpdateCourse(ctx *fiber.Ctx) error {
 
 	course.ID = id
 
-	// Call service to update course
-	err := c.service.UpdateCourse(course)
+	// Call Service to update course
+	err := c.Service.UpdateCourse(course)
 	if err != nil {
 		// Handle specific error for not found course
 		if strings.Contains(err.Error(), "course not found") {
@@ -103,7 +103,7 @@ func (c *CourseController) UpdateCourse(ctx *fiber.Ctx) error {
 func (c *CourseController) DeleteCourseByID(ctx *fiber.Ctx) error {
 	courseID := ctx.Params("course_id")
 
-	err := c.service.DeleteCourseByID(courseID)
+	err := c.Service.DeleteCourseByID(courseID)
 	if err != nil {
 		if strings.Contains(err.Error(), "Course not found") {
 			return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{

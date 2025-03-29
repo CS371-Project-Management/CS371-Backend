@@ -17,22 +17,35 @@ type CreateCourseRequest struct {
 	Number          int    `json:"number"`
 }
 
-type CourseService struct {
+type CourseService interface {
+	CreateCourse(request *CreateCourseRequest) (*models.Course, error)
+	UpdateCourse(course *models.UpdateCourseRequest) error
+	GetCoursesByClassID(classID string) ([]models.Course, error)
+	EnrollCourse(userCourse *models.UserCourse) error
+	DeleteCourseByID(courseID string) error
+}
+
+type CourseServiceImpl struct {
 	courseRepository     *repositories.CourseRepository
 	classRepository      *repositories.ClassRepository
 	userCourseRepository *repositories.UserCourseRepository
 }
 
-func NewCourseService() *CourseService {
-	return &CourseService{
+type courseServiceImpl struct {
+	courseRepository     *repositories.CourseRepository
+	classRepository      *repositories.ClassRepository
+	userCourseRepository *repositories.UserCourseRepository
+}
+
+func NewCourseService() CourseService {
+	return &courseServiceImpl{
 		courseRepository:     repositories.NewCourseRepository(),
 		classRepository:      repositories.NewClassRepository(),
 		userCourseRepository: repositories.NewUserCourseRepository(),
 	}
 }
 
-func (s *CourseService) CreateCourse(request *CreateCourseRequest) (*models.Course, error) {
-	// สร้าง Course ใหม่
+func (s *courseServiceImpl) CreateCourse(request *CreateCourseRequest) (*models.Course, error) {
 	course := new(models.Course)
 	course.ClassID = request.ClassID
 	course.Title = request.Title
@@ -40,13 +53,11 @@ func (s *CourseService) CreateCourse(request *CreateCourseRequest) (*models.Cour
 	course.DifficultyLevel = request.DifficultyLevel
 	course.Number = request.Number
 
-	// สร้าง Course ใหม่ในฐานข้อมูล
 	err := s.courseRepository.Create(course)
 	if err != nil {
 		return nil, fmt.Errorf("Error creating course: %w", err)
 	}
 
-	// สร้าง UserCourse สำหรับทุกผู้ใช้ใน Class
 	err = s.createUserCoursesForClass(course.ClassID, course.ID)
 	if err != nil {
 		return nil, fmt.Errorf("Error creating user courses: %w", err)
@@ -55,22 +66,18 @@ func (s *CourseService) CreateCourse(request *CreateCourseRequest) (*models.Cour
 	return course, nil
 }
 
-func (s *CourseService) createUserCoursesForClass(classID, courseID string) error {
-	// ดึงผู้ใช้ทั้งหมดที่อยู่ใน class โดยใช้ UserClassRepository
+func (s *courseServiceImpl) createUserCoursesForClass(classID, courseID string) error {
 	userIDs, err := s.classRepository.GetUsersByClassID(classID)
 	if err != nil {
 		return fmt.Errorf("Error fetching users from user_classes: %w", err)
 	}
 
-	// สำหรับแต่ละ user ที่อยู่ใน class ให้สร้าง user_course
 	for _, userID := range userIDs {
-		// สร้าง UserCourse ใหม่
 		userCourse := &models.UserCourse{
 			UserID:   userID.ID,
 			CourseID: courseID,
 		}
 
-		// เพิ่ม user_course ลงในฐานข้อมูล
 		err := s.userCourseRepository.Create(userCourse)
 		if err != nil {
 			return fmt.Errorf("Error creating user_course for user %s: %w", userID, err)
@@ -80,11 +87,11 @@ func (s *CourseService) createUserCoursesForClass(classID, courseID string) erro
 	return nil
 }
 
-func (s *CourseService) UpdateCourse(course *models.UpdateCourseRequest) error {
+func (s *courseServiceImpl) UpdateCourse(course *models.UpdateCourseRequest) error {
 	return s.courseRepository.Update(course)
 }
 
-func (s *CourseService) GetCoursesByClassID(classID string) ([]models.Course, error) {
+func (s *courseServiceImpl) GetCoursesByClassID(classID string) ([]models.Course, error) {
 	courses, err := s.courseRepository.FindByClassId(classID)
 	if err != nil {
 		return nil, err
@@ -95,11 +102,11 @@ func (s *CourseService) GetCoursesByClassID(classID string) ([]models.Course, er
 	return courses, nil
 }
 
-func (s *CourseService) EnrollCourse(userCourse *models.UserCourse) error {
+func (s *courseServiceImpl) EnrollCourse(userCourse *models.UserCourse) error {
 	return s.userCourseRepository.Create(userCourse)
 }
 
-func (s *CourseService) DeleteCourseByID(courseID string) error {
+func (s *courseServiceImpl) DeleteCourseByID(courseID string) error {
 	log.Println("Service: Deleting course with id: ", courseID)
 
 	err := s.courseRepository.DeleteCourseByID(courseID)

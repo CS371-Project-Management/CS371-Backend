@@ -35,15 +35,21 @@ type CreateMissingWordQuizHistoryData struct {
 	Result bool   `json:"result"`
 }
 
-type QuizHistoryService struct {
+type QuizHistoryService interface {
+	TakeQuiz(request *CreateQuizHistoryRequest) (*quizhistorymodel.QuizHistory, error)
+	GetQuizHistoryByID(historyID string) (*CreateQuizHistoryRequest, error)
+	GetAllQuizHistoryByQuizID(quizID string) ([]CreateQuizHistoryRequest, error)
+}
+
+type quizHistoryServiceImpl struct {
 	quizHistoryRepository            *quiz_history.QuizHistoryRepository
 	choiceHistoryRepository          *quiz_history.ChoiceQuizHistoryRepository
 	orderHistoryRepository           *quiz_history.OrderingQuizHistoryRepository
 	missingWordQuizHistoryRepository *quiz_history.MissingWordQuizHistoryRepository
 }
 
-func NewQuizHistoryService() *QuizHistoryService {
-	return &QuizHistoryService{
+func NewQuizHistoryService() QuizHistoryService {
+	return &quizHistoryServiceImpl{
 		quizHistoryRepository:            quiz_history.NewQuizHistoryRepository(),
 		choiceHistoryRepository:          quiz_history.NewChoiceQuizHistoryRepository(),
 		orderHistoryRepository:           quiz_history.NewOrderingQuizHistoryRepository(),
@@ -51,7 +57,7 @@ func NewQuizHistoryService() *QuizHistoryService {
 	}
 }
 
-func (s *QuizHistoryService) TakeQuiz(request *CreateQuizHistoryRequest) (*quizhistorymodel.QuizHistory, error) {
+func (s *quizHistoryServiceImpl) TakeQuiz(request *CreateQuizHistoryRequest) (*quizhistorymodel.QuizHistory, error) {
 	// ลบประวัติเดิมก่อน (ถ้ามี)
 	err := s.quizHistoryRepository.DeleteQuizHistoryByQuizID(request.QuizID, request.UserID)
 	if err != nil {
@@ -123,7 +129,7 @@ func (s *QuizHistoryService) TakeQuiz(request *CreateQuizHistoryRequest) (*quizh
 	return quizHistory, nil
 }
 
-func (s *QuizHistoryService) GetQuizHistoryByID(historyID string) (*CreateQuizHistoryRequest, error) {
+func (s *quizHistoryServiceImpl) GetQuizHistoryByID(historyID string) (*CreateQuizHistoryRequest, error) {
 	// ดึงข้อมูลประวัติหลัก
 	history, err := s.quizHistoryRepository.GetQuizHistoryByID(historyID)
 	if err != nil {
@@ -188,7 +194,7 @@ func (s *QuizHistoryService) GetQuizHistoryByID(historyID string) (*CreateQuizHi
 	return response, nil
 }
 
-func (s *QuizHistoryService) GetAllQuizHistoryByQuizID(quizID string) ([]CreateQuizHistoryRequest, error) {
+func (s *quizHistoryServiceImpl) GetAllQuizHistoryByQuizID(quizID string) ([]CreateQuizHistoryRequest, error) {
 	quizHistories, err := s.quizHistoryRepository.GetAllQuizHistoryByQuizID(quizID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get quiz histories: %w", err)
