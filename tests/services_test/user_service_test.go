@@ -1,6 +1,7 @@
 package services_test
 
 import (
+	"cs371-backend/internal/app/services"
 	"errors"
 	"fmt"
 	"os"
@@ -201,7 +202,7 @@ func (s *testUserService) ResetPassword(tokenString, newPassword string) error {
 }
 
 // สร้าง helper function สำหรับสร้าง UserService ที่ใช้ MockUserRepository
-func setupUserService() (*testUserService, *MockUserRepository) {
+func setupUserService() (services.UserService, *MockUserRepository) {
 	mockRepo := new(MockUserRepository)
 	service := &testUserService{
 		repo: mockRepo,
