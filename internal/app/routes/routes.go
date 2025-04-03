@@ -47,6 +47,8 @@ func SetupRoutes(app *fiber.App) {
 	api1.Put("/courses/:course_id",middlewares.AuthMiddleware, courseController.UpdateCourse)
 	api1.Delete("/courses/:course_id",middlewares.AuthMiddleware, courseController.DeleteCourseByID)
 
+	api1.Get("/courses/:course_id",middlewares.AuthMiddleware, courseController.GetCourseByIDHandler)
+
 	quizController := controllers.NewQuizController()
 	api1.Post("/quizzes",middlewares.AuthMiddleware, quizController.CreateChoiceQuiz)
 	api1.Get("/quizzes/:course_id",middlewares.AuthMiddleware, quizController.GetAllQuizByCourseID)
