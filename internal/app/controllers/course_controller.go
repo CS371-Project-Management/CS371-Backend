@@ -120,3 +120,22 @@ func (c *CourseController) DeleteCourseByID(ctx *fiber.Ctx) error {
 		"message": "Course deleted successfully",
 	})
 }
+
+func (c *CourseController) GetCourseByIDHandler(ctx *fiber.Ctx) error {
+	courseID := ctx.Params("course_id")
+	if courseID == "" {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid course ID"})
+	}
+
+	course, err := c.service.GetCourseByID(courseID)
+	if err != nil {
+		// ถ้าไม่พบคอสจะคืน error "course not found"
+		if err.Error() == "course not found" {
+			return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Course not found"})
+		}
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(course)
+}
+

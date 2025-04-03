@@ -112,3 +112,14 @@ func (s *CourseService) DeleteCourseByID(courseID string) error {
 
 	return nil
 }
+
+func (s *CourseService) GetCourseByID(courseID string) (*models.Course, error) {
+	course, err := s.courseRepository.GetCourseByID(courseID)
+	if err != nil {
+		return nil, err
+	}
+	if course == nil {
+		return nil, fmt.Errorf("course not found")
+	}
+	return course, nil
+}

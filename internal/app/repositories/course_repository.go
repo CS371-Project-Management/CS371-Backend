@@ -102,3 +102,28 @@ func (r *CourseRepository) DeleteCourseByID(courseID string) error {
 
 	return nil
 }
+
+func (r *CourseRepository) GetCourseByID(courseID string) (*models.Course, error) {
+	query := `
+		SELECT id, class_id, number, title, description, difficulty_level
+		FROM courses
+		WHERE id = ?
+	`
+	row := db.DB.QueryRow(query, courseID)
+	var course models.Course
+	err := row.Scan(
+		&course.ID,
+		&course.ClassID,
+		&course.Number,
+		&course.Title,
+		&course.Description,
+		&course.DifficultyLevel,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("GetCourseByID: error scanning row: %w", err)
+	}
+	return &course, nil
+}
