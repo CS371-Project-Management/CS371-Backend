@@ -7,12 +7,12 @@ import (
 )
 
 type QuizHistoryController struct {
-	quizHistoryService *services.QuizHistoryService
+	Service services.QuizHistoryService
 }
 
-func NewQuizHistoryController() *QuizHistoryController {
+func NewQuizHistoryController(service services.QuizHistoryService) *QuizHistoryController {
 	return &QuizHistoryController{
-		quizHistoryService: services.NewQuizHistoryService(),
+		Service: service,
 	}
 }
 
@@ -23,7 +23,7 @@ func (c *QuizHistoryController) TakeQuiz(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
 	}
 
-	quizHistory, err := c.quizHistoryService.TakeQuiz(request)
+	quizHistory, err := c.Service.TakeQuiz(request)
 	if err != nil {
 		if strings.Contains(err.Error(), "invalid quiz type") == true {
 			return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
@@ -43,7 +43,7 @@ func (c *QuizHistoryController) TakeQuiz(ctx *fiber.Ctx) error {
 func (c *QuizHistoryController) GetAllQuizHistoryByQuizID(ctx *fiber.Ctx) error {
 	quizID := ctx.Params("quiz_id")
 
-	quizHistories, err := c.quizHistoryService.GetAllQuizHistoryByQuizID(quizID)
+	quizHistories, err := c.Service.GetAllQuizHistoryByQuizID(quizID)
 	if err != nil {
 		if strings.Contains(err.Error(), "error executing query") {
 			return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -71,7 +71,7 @@ func (c *QuizHistoryController) GetAllQuizHistoryByQuizID(ctx *fiber.Ctx) error 
 func (c *QuizHistoryController) GetQuizHistoryByID(ctx *fiber.Ctx) error {
 	historyID := ctx.Params("history_id")
 
-	history, err := c.quizHistoryService.GetQuizHistoryByID(historyID)
+	history, err := c.Service.GetQuizHistoryByID(historyID)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
 			return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{

@@ -18,17 +18,27 @@ import (
 // กำหนด secret key
 var jwtSecret = []byte("secret-reset-token")
 
-type UserService struct {
+type UserService interface {
+	Login(username, password string) (string, string, error)
+	GetAllUsers() ([]models.User, error)
+	GetUserByID(id string) (*models.User, error)
+	CreateUser(user *models.User) error
+	UpdateUser(user *models.User) error
+	DeleteUser(id string) error
+	GenerateResetPasswordToken(email string) (string, error)
+	ResetPassword(tokenString, newPassword string) error
+}
+type userServiceImpl struct {
 	repo *repositories.UserRepository
 }
 
-func NewUserService() *UserService {
-	return &UserService{
+func NewUserService() UserService {
+	return &userServiceImpl{
 		repo: repositories.NewUserRepository(),
 	}
 }
 
-func (s *UserService) Login(username, password string) (string, string, error) {
+func (s *userServiceImpl) Login(username, password string) (string, string, error) {
 	user, err := s.repo.FindByUsername(username)
 	if err != nil || user == nil {
 		return "", "", errors.New("user not found or incorrect password")
@@ -57,16 +67,16 @@ func (s *UserService) Login(username, password string) (string, string, error) {
 	return user.ID, tokenString, nil
 }
 
-func (s *UserService) GetAllUsers() ([]models.User, error) {
+func (s *userServiceImpl) GetAllUsers() ([]models.User, error) {
 	return s.repo.FindAll()
 }
 
-func (s *UserService) GetUserByID(id string) (*models.User, error) {
-    return s.repo.FindByID(id)
+func (s *userServiceImpl) GetUserByID(id string) (*models.User, error) {
+	return s.repo.FindByID(id)
 }
 
 // CreateUser ตรวจสอบซ้ำ username + แฮช password ก่อนบันทึก
-func (s *UserService) CreateUser(user *models.User) error {
+func (s *userServiceImpl) CreateUser(user *models.User) error {
 	// 1) ตรวจสอบความถูกต้องเบื้องต้น
 	if user.Username == "" || user.Password == "" {
 		return errors.New("username or password cannot be empty")
@@ -92,17 +102,17 @@ func (s *UserService) CreateUser(user *models.User) error {
 	return s.repo.Create(user)
 }
 
-func (s *UserService) UpdateUser(user *models.User) error {
+func (s *userServiceImpl) UpdateUser(user *models.User) error {
 	return s.repo.Update(user)
 }
 
-func (s *UserService) DeleteUser(id string) error {
+func (s *userServiceImpl) DeleteUser(id string) error {
 	return s.repo.Delete(id)
 }
 
 // GenerateResetToken สร้าง reset token สำหรับรีเซ็ตรหัสผ่าน แล้วบันทึกลง DB
 // แล้วส่ง (หรือแสดง) ลิงก์สำหรับรีเซ็ตรหัสผ่าน
-func (s *UserService) GenerateResetPasswordToken(email string) (string, error) {
+func (s *userServiceImpl) GenerateResetPasswordToken(email string) (string, error) {
 	user, err := s.repo.FindByEmail(email)
 	if err != nil {
 		return "", err
@@ -127,7 +137,7 @@ func (s *UserService) GenerateResetPasswordToken(email string) (string, error) {
 }
 
 // ResetPassword ตรวจสอบ reset token แล้วเปลี่ยนรหัสผ่านใหม่
-func (s *UserService) ResetPassword(tokenString, newPassword string) error {
+func (s *userServiceImpl) ResetPassword(tokenString, newPassword string) error {
 	// แกะ JWT
 	token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
 		// ตรวจสอบ Signing Method

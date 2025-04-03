@@ -1,20 +1,21 @@
 package controllers
 
 import (
-	"github.com/gofiber/fiber/v2"
 	"strconv"
+
+	"github.com/gofiber/fiber/v2"
 
 	"cs371-backend/internal/app/models"
 	"cs371-backend/internal/app/services"
 )
 
 type ClassController struct {
-	service *services.ClassService
+	Service services.ClassService
 }
 
-func NewClassController() *ClassController {
+func NewClassController(service services.ClassService) *ClassController {
 	return &ClassController{
-		service: services.NewClassService(),
+		Service: service,
 	}
 }
 
@@ -49,7 +50,7 @@ func (cc *ClassController) CreateClassHandler(c *fiber.Ctx) error {
 	}
 
 	// เรียก Service เพื่อสร้างคลาส
-	if err := cc.service.CreateClass(class); err != nil {
+	if err := cc.Service.CreateClass(class); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": err.Error(),
 		})
@@ -66,7 +67,7 @@ func (cc *ClassController) CreateClassHandler(c *fiber.Ctx) error {
 
 // GetAllClassesHandler ดึงรายการคลาสทั้งหมด
 func (cc *ClassController) GetAllClassesHandler(c *fiber.Ctx) error {
-	classes, err := cc.service.GetAllClasses()
+	classes, err := cc.Service.GetAllClasses()
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": err.Error(),
@@ -84,7 +85,7 @@ func (cc *ClassController) GetClassHandler(c *fiber.Ctx) error {
 		})
 	}
 
-	class, err := cc.service.GetClassByID(idParam)
+	class, err := cc.Service.GetClassByID(idParam)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": err.Error(),
@@ -137,7 +138,7 @@ func (cc *ClassController) UpdateClassHandler(c *fiber.Ctx) error {
 		Accessibility: accessibility,
 	}
 
-	if err := cc.service.UpdateClass(class); err != nil {
+	if err := cc.Service.UpdateClass(class); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": err.Error(),
 		})
@@ -150,6 +151,39 @@ func (cc *ClassController) UpdateClassHandler(c *fiber.Ctx) error {
 	})
 }
 
+func (cc *ClassController) GetUsersByClassIDHandler(c *fiber.Ctx) error {
+	classID := c.Params("id")
+	if classID == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Class ID is required"})
+	}
+
+	users, err := cc.Service.GetUsersByClassID(classID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.JSON(fiber.Map{"users": users})
+}
+
+// ดึงคลาสที่เจ้าของเป็น user ที่ระบุใน URL parameter
+func (cc *ClassController) GetOwnedClassesHandler(c *fiber.Ctx) error {
+	userID := c.Params("user_id")
+	if userID == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "User ID is required",
+		})
+	}
+
+	classes, err := cc.Service.GetClassesOwnedByUser(userID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return c.JSON(classes)
+}
+
 func (cc *ClassController) DeleteClassHandler(c *fiber.Ctx) error {
 	// Retrieve the class ID from the URL parameter
 	idParam := c.Params("id")
@@ -159,8 +193,8 @@ func (cc *ClassController) DeleteClassHandler(c *fiber.Ctx) error {
 		})
 	}
 
-	// Call the service layer to delete the class using the UUID string
-	err := cc.service.DeleteClass(idParam)
+	// Call the Service layer to delete the class using the UUID string
+	err := cc.Service.DeleteClass(idParam)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": err.Error(),
@@ -179,7 +213,7 @@ func (cc *ClassController) GetInviteCodeHandler(c *fiber.Ctx) error {
 			"error": "Invalid class ID",
 		})
 	}
-	inviteCode, err := cc.service.GetInviteCode(idParam)
+	inviteCode, err := cc.Service.GetInviteCode(idParam)
 	if err != nil {
 		switch err.Error() {
 		case "class not found":
@@ -199,7 +233,7 @@ func (cc *ClassController) GetInviteCodeHandler(c *fiber.Ctx) error {
 
 // JoinPublicClassHandler สำหรับผู้ใช้เข้าร่วมคลาสสาธารณะ
 func (cc *ClassController) JoinPublicClassHandler(c *fiber.Ctx) error {
-	// ดึง userID จาก session หรือ token (สมมติว่า middleware เก็บเป็น string)
+	// ดึง userID จาก session หรือ token
 	userIDAny := c.Locals("user_id")
 	if userIDAny == nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "User not authenticated"})
@@ -214,7 +248,7 @@ func (cc *ClassController) JoinPublicClassHandler(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid class ID"})
 	}
 
-	if err := cc.service.JoinPublicClass(userID, classID); err != nil {
+	if err := cc.Service.JoinPublicClass(userID, classID); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 
@@ -242,7 +276,7 @@ func (cc *ClassController) JoinPrivateClassHandler(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invite code is required"})
 	}
 
-	if err := cc.service.JoinPrivateClass(userID, req.InviteCode); err != nil {
+	if err := cc.Service.JoinPrivateClass(userID, req.InviteCode); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 
@@ -268,7 +302,7 @@ func (cc *ClassController) LeaveClassHandler(c *fiber.Ctx) error {
 	}
 
 	// เรียกใช้งาน Service เพื่อทำกระบวนการ leave class
-	if err := cc.service.LeaveClass(userID, classID); err != nil {
+	if err := cc.Service.LeaveClass(userID, classID); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 
@@ -286,9 +320,25 @@ func (cc *ClassController) RemoveUserFromClassHandler(c *fiber.Ctx) error {
 	}
 
 	// เรียกใช้ Service เพื่อลบผู้ใช้
-	if err := cc.service.LeaveClass(userID, classID); err != nil {
+	if err := cc.Service.LeaveClass(userID, classID); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 
 	return c.JSON(fiber.Map{"message": "User removed from class successfully"})
+}
+
+// GetClassUserJoinByUserIDHandler - GET /classes/joined/:user_id
+// ดึงคลาสที่ผู้ใช้เข้าร่วม (โดยใช้ user_id จาก URL parameter)
+func (cc *ClassController) GetClassUserJoinByUserIDHandler(c *fiber.Ctx) error {
+	userID := c.Params("user_id")
+	if userID == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "User ID is required"})
+	}
+
+	classes, err := cc.Service.GetClassUserJoinByUserID(userID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.JSON(classes)
 }

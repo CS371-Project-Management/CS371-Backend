@@ -121,9 +121,10 @@ func (r *CourseRepository) GetCourseByID(courseID string) (*models.Course, error
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, nil
+			return nil, nil // ไม่พบคอร์ส
 		}
 		return nil, fmt.Errorf("GetCourseByID: error scanning row: %w", err)
 	}
 	return &course, nil
 }
+

@@ -50,7 +50,14 @@ type CreateMissingWordQuizData struct {
 	Answer   string `json:"answer"`
 }
 
-type QuizService struct {
+type QuizService interface {
+	CreateQuiz(request *CreateQuizRequest) (*quizmodel.Quiz, error)
+	GetAllQuizByCourseID(courseID string) ([]CreateQuizRequest, error)
+	DeleteQuizByID(quizID string) error
+	CheckCourseCompletion(courseID, userID string) (map[string]interface{}, error)
+}
+
+type quizServiceImpl struct {
 	quizRepository         *quiz.QuizRepository
 	quizHistoryRepository  *quiz_history.QuizHistoryRepository
 	choiceRepository       *quiz.ChoiceQuizRepository
@@ -60,8 +67,8 @@ type QuizService struct {
 	missingWordRepository  *quiz.MissingWordQuizRepository
 }
 
-func NewQuizService() *QuizService {
-	return &QuizService{
+func NewQuizService() QuizService {
+	return &quizServiceImpl{
 		quizRepository:         quiz.NewQuizRepository(),
 		quizHistoryRepository:  quiz_history.NewQuizHistoryRepository(),
 		choiceRepository:       quiz.NewChoiceQuizRepository(),
@@ -72,7 +79,7 @@ func NewQuizService() *QuizService {
 	}
 }
 
-func (s *QuizService) CreateQuiz(request *CreateQuizRequest) (*quizmodel.Quiz, error) {
+func (s *quizServiceImpl) CreateQuiz(request *CreateQuizRequest) (*quizmodel.Quiz, error) {
 	quizType, err := quizmodel.ValidateQuizType(request.QuizType)
 	if err != nil {
 		return nil, err
@@ -159,7 +166,7 @@ func (s *QuizService) CreateQuiz(request *CreateQuizRequest) (*quizmodel.Quiz, e
 	return quiz, nil
 }
 
-func (s *QuizService) GetAllQuizByCourseID(courseID string) ([]CreateQuizRequest, error) {
+func (s *quizServiceImpl) GetAllQuizByCourseID(courseID string) ([]CreateQuizRequest, error) {
 	quizzes, err := s.quizRepository.GetAllQuizByCourseID(courseID)
 	if err != nil {
 		return nil, err
@@ -269,7 +276,7 @@ func (s *QuizService) GetAllQuizByCourseID(courseID string) ([]CreateQuizRequest
 	return nil, fmt.Errorf("no quizzes found for course ID: %s", courseID)
 }
 
-func (s *QuizService) DeleteQuizByID(quizID string) error {
+func (s *quizServiceImpl) DeleteQuizByID(quizID string) error {
 	log.Println("Service: Deleting quiz with id: ", quizID)
 	err := s.quizRepository.DeleteQuizByID(quizID)
 	if err != nil {
@@ -282,7 +289,7 @@ func (s *QuizService) DeleteQuizByID(quizID string) error {
 	return nil
 }
 
-func (s *QuizService) CheckCourseCompletion(courseID, userID string) (map[string]interface{}, error) {
+func (s *quizServiceImpl) CheckCourseCompletion(courseID, userID string) (map[string]interface{}, error) {
 	// นับจำนวนคำถามทั้งหมดในคอร์ส
 	totalQuizzes, err := s.quizRepository.CountQuizByCourseID(courseID)
 	if err != nil {
