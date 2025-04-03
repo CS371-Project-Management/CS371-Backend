@@ -23,6 +23,7 @@ type CourseService interface {
 	GetCoursesByClassID(classID string) ([]models.Course, error)
 	EnrollCourse(userCourse *models.UserCourse) error
 	DeleteCourseByID(courseID string) error
+	GetCourseByID(courseID string) (*models.Course, error)
 }
 
 type CourseServiceImpl struct {

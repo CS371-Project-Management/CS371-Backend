@@ -121,23 +121,6 @@ func (c *CourseController) DeleteCourseByID(ctx *fiber.Ctx) error {
 	})
 }
 
-package controllers
-
-import (
-	"cs371-backend/internal/app/services"
-	"github.com/gofiber/fiber/v2"
-)
-
-type CourseController struct {
-	Service services.CourseService
-}
-
-func NewCourseController(service services.CourseService) *CourseController {
-	return &CourseController{
-		Service: service,
-	}
-}
-
 // GetCourseByIDHandler - GET /courses/:course_id
 func (c *CourseController) GetCourseByIDHandler(ctx *fiber.Ctx) error {
 	courseID := ctx.Params("course_id")
